@@ -17,6 +17,9 @@ const UtilsTablerIcons = Loadable(lazy(() => import('views/utilities/TablerIcons
 // sample page routing
 const SamplePage = Loadable(lazy(() => import('views/sample-page')));
 
+// faces routing
+const FacesDetection = Loadable(lazy(() => import('views/faces/face_detection')));
+
 // ==============================|| MAIN ROUTING ||============================== //
 
 const MainRoutes = {
@@ -36,6 +39,47 @@ const MainRoutes = {
         }
       ]
     },
+
+    {
+      path: 'faces',
+      children: [
+        {
+          path: 'face-detection',
+          element: <FacesDetection />
+        }
+      ]
+    },
+
+    {
+      path: 'faces',
+      children: [
+        {
+          path: 'face-comparision',
+          element: <UtilsTypography />
+        }
+      ]
+    },
+
+    {
+      path: 'faces',
+      children: [
+        {
+          path: 'face-search',
+          element: <UtilsTypography />
+        }
+      ]
+    },
+
+    {
+      path: 'faces',
+      children: [
+        {
+          path: 'liveness',
+          element: <UtilsTypography />
+        }
+      ]
+    },
+
     {
       path: 'utils',
       children: [

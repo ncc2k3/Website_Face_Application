@@ -21,7 +21,7 @@ const MainCard = forwardRef(
       content = true,
       contentClass = '',
       contentSX = {},
-      darkTitle,
+      darkTitle = false,  // Thêm giá trị mặc định
       secondary,
       shadow,
       sx = {},
@@ -46,18 +46,35 @@ const MainCard = forwardRef(
         }}
       >
         {/* card header and action */}
-        {title && <CardHeader sx={headerSX} title={darkTitle ? <Typography variant="h3">{title}</Typography> : title} action={secondary} />}
+        {title && (
+          <CardHeader
+            sx={headerSX}
+            title={
+              darkTitle ? (
+                <Typography variant="h2" sx={{ color: 'red', fontWeight: 'bold' }}>
+                  {title}
+                </Typography>
+              ) : (
+                <Typography variant="h2" sx={{ color: 'red', fontWeight: 'bold' }}>
+                  {title}
+                </Typography>
+              )
+            }
+            action={secondary}
+          />
+        )}
 
         {/* content & header divider */}
         {title && <Divider />}
 
         {/* card content */}
-        {content && (
+        {content ? (
           <CardContent sx={contentSX} className={contentClass}>
             {children}
           </CardContent>
+        ) : (
+          children
         )}
-        {!content && children}
       </Card>
     );
   }
