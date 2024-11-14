@@ -19,6 +19,7 @@ const SamplePage = Loadable(lazy(() => import('views/sample-page')));
 
 // faces routing
 const FacesDetection = Loadable(lazy(() => import('views/faces/face_detection')));
+const FacesComparision = Loadable(lazy(() => import('views/faces/face_comparision')));
 
 // ==============================|| MAIN ROUTING ||============================== //
 
@@ -55,7 +56,7 @@ const MainRoutes = {
       children: [
         {
           path: 'face-comparision',
-          element: <UtilsTypography />
+          element: <FacesComparision />
         }
       ]
     },

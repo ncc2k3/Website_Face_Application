@@ -1,15 +1,22 @@
 // assets
-import { IconTypography, IconPalette, IconShadow, IconWindmill } from '@tabler/icons';
+import { IconEye, IconSearch, IconScale, IconHeartbeat } from '@tabler/icons';
+
+// Các icon mới sẽ là:
+// - IconEye cho Face Detection
+// - IconSearch cho Search
+// - IconScale cho Comparison
+// - IconHeartbeat cho Liveness
+
 
 // constant
 const icons = {
-    IconTypography,
-    IconPalette,
-    IconShadow,
-    IconWindmill
+    IconEye,
+    IconSearch,
+    IconScale,
+    IconHeartbeat
 };
 
-// ==============================|| UTILITIES MENU ITEMS ||============================== //
+// ==============================|| FACES MENU ITEMS ||============================== //
 
 const faces = {
     id: 'faces',
@@ -21,7 +28,7 @@ const faces = {
             title: 'Face Detection',
             type: 'item',
             url: '/faces/face-detection',
-            icon: icons.IconTypography,
+            icon: icons.IconEye,
             breadcrumbs: false
         },
         {
@@ -29,7 +36,7 @@ const faces = {
             title: 'Face Comparision',
             type: 'item',
             url: '/faces/face-comparision',
-            icon: icons.IconTypography,
+            icon: icons.IconSearch,
             breadcrumbs: false
         },
         {
@@ -37,7 +44,7 @@ const faces = {
             title: 'Face Search',
             type: 'item',
             url: '/faces/face-search',
-            icon: icons.IconTypography,
+            icon: icons.IconScale,
             breadcrumbs: false
         },
         {
@@ -45,7 +52,7 @@ const faces = {
             title: 'Liveness (Anti-Spoofing)',
             type: 'item',
             url: '/faces/liveness',
-            icon: icons.IconTypography,
+            icon: icons.IconHeartbeat,
             breadcrumbs: false
         },
     ]

@@ -89,7 +89,7 @@ const FaceDetection = () => {
                         <Box
                             sx={{
                                 width: '100%',
-                                height: '500px',
+                                height: 'auto',
                                 backgroundColor: displayedImage ? 'transparent' : '#333', // Đặt màu nền là trong suốt khi có ảnh
                                 display: 'flex',
                                 alignItems: 'center',
@@ -97,7 +97,12 @@ const FaceDetection = () => {
                                 flexDirection: 'column',
                                 color: '#fff',
                                 borderRadius: '10px',
-                                overflow: 'hidden' // Đảm bảo ảnh không vượt quá kích thước khung
+                                overflow: 'hidden', // Đảm bảo ảnh không vượt quá kích thước khung
+                                objectFit: 'cover',
+                                cursor: 'pointer',
+                                aspectRatio: '1 / 1',
+                                marginBottom: 3,
+                                marginTop: 3
                             }}
                         >
                             {!displayedImage ? (
@@ -136,7 +141,7 @@ const FaceDetection = () => {
                                 variant="outlined"
                                 color="primary"
                                 onClick={handleStartOver}
-                                sx={{ marginTop: 2 }}
+                                sx={{ marginTop: 2, borderRadius: '10px' }}
                             >
                                 Start Over
                             </Button>
