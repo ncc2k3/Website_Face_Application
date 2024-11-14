@@ -1,14 +1,16 @@
-# import mysql.connector
+import psycopg2
+from psycopg2 import sql
 
-# connection = mysql.connector(
-#     host = "localhost",
-#     user = "root",
-#     password = ""
-# )
+# Thông tin kết nối
+DATABASE_CONFIG = {
+    'dbname': 'cv_project',
+    'user': 'postgres',
+    'password': '123',
+    'host': 'localhost',
+    'port': '5432'
+}
 
-# cursor = connection.cursor()
-
-# User Database
-from flask_sqlalchemy import SQLAlchemy
-
-userdb = SQLAlchemy()  # Khởi tạo SQLAlchemy mà không truyền vào app
+# Tạo kết nối và con trỏ
+def get_connection():
+    conn = psycopg2.connect(**DATABASE_CONFIG)
+    return conn

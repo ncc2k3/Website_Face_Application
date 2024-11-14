@@ -1,17 +1,19 @@
 from flask import Blueprint, request, jsonify
-from app.packages.auth.services.AuthService import AuthService   
+from app.packages.auth.services.AuthService import AuthService
 import uuid
 import os
-from app.repositories.UserRepository import UserRepository
 
 auth_blueprint = Blueprint('auth', __name__)
 auth_service = AuthService()
 
 # Routes: auth/login
-@auth_blueprint.route('/login', methods=['POST', 'GET'])
+@auth_blueprint.route('/login', methods=['POST'])
 def login():
     email = request.json.get('email')
     password = request.json.get('password')
+    
+    if not email or not password:
+        return jsonify({"error": "Email and password are required"}), 400
     
     return auth_service.authenticate_user(email, password)
 
@@ -20,10 +22,13 @@ def login():
 def login_face():
     image_file = request.files.get('image')
 
+    if image_file is None:
+        return jsonify({"error": "No image provided"}), 400
+
     return auth_service.authenticate_by_face(image_file)
 
 # Routes: auth/register
-@auth_blueprint.route('/register', methods=['POST', 'GET'])
+@auth_blueprint.route('/register', methods=['POST'])
 def register_user():
     first_name = request.json.get("first_name")
     last_name = request.json.get("last_name")
@@ -31,17 +36,21 @@ def register_user():
     password = request.json.get("password")
     
     if not email or not password:
-        return jsonify({"error": "All Fields are required"}), 400
+        return jsonify({"error": "Email and password are required"}), 400
     
     return auth_service.register_user(first_name, last_name, email, password)
 
 # Routes: auth/register_face
 @auth_blueprint.route('/register_face', methods=['POST'])
 def register_face():
-    email = request.form.get('email')  # Nhận email từ client
-    image_file = request.files.get('image') 
+    email = request.form.get('email')
+    image_file = request.files.get('image')
+    
+    if not email:
+        return jsonify({"error": "Email is required"}), 400
+    
     if image_file is None:
-        return jsonify({"message": "No image provided"}), 400
+        return jsonify({"error": "No image provided"}), 400
 
     return auth_service.register_face_id(email)
 
