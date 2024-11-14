@@ -12,3 +12,5 @@
 from flask_sqlalchemy import SQLAlchemy
 
 userdb = SQLAlchemy()  # Khởi tạo SQLAlchemy mà không truyền vào app
+
+# facedb = SQLAlchemy()
