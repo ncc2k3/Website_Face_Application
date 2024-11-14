@@ -1,5 +1,6 @@
 from flask import Flask
 from app.packages.auth.controllers.AuthController import auth_blueprint
+from app.packages.face_recognition.controllers.FaceRecognitionController import face_recognition_blueprint
 from app.controllers import *
 from flask_cors import CORS
 from app.config.AppConfig import Config
@@ -20,5 +21,7 @@ def create_app():
     
         # Đăng ký các Blueprint hoặc các route khác nếu cần
         app.register_blueprint(auth_blueprint, url_prefix='/auth')
+        
+        app.register_blueprint(face_recognition_blueprint, url_prefix='/face_recognition')
     
     return app
