@@ -40,7 +40,8 @@ const MainRoutes = {
         }
       ]
     },
-
+    
+    // faces routing
     {
       path: 'faces',
       children: [
