@@ -28,3 +28,31 @@ def detect_face():
     os.remove(image_path)
     
     return jsonify(result)
+
+# routes: /face_recognition/compare
+@face_recognition_blueprint.route('/compare', methods=['POST'])
+def compare_faces():
+    """
+    Endpoint để so sánh 2 ảnh và trả về độ giống nhau giữa chúng.
+    """
+    # Lấy 2 ảnh từ request
+    image1 = request.files.get('image1')
+    image2 = request.files.get('image2')
+
+    if not image1 or not image2:
+        return jsonify({"message": "Two images are required"}), 400
+
+    # Lưu 2 ảnh tạm để xử lý
+    image1_path = f"./app/images/{image1.filename}"
+    image2_path = f"./app/images/{image2.filename}"
+    image1.save(image1_path)
+    image2.save(image2_path)
+
+    # So sánh 2 ảnh và trả về độ giống nhau
+    result = face_recognition_service.compare_faces(image1_path, image2_path)
+
+    # Xóa 2 ảnh tạm sau khi xử lý
+    os.remove(image1_path)
+    os.remove(image2_path)
+
+    return jsonify(result)

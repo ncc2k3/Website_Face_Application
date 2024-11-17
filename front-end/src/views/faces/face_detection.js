@@ -33,6 +33,7 @@ const FaceDetection = () => {
     const [displayedImage, setDisplayedImage] = useState(null);
     const [boundingBoxes, setBoundingBoxes] = useState([]);
     const [noFaceDetected, setNoFaceDetected] = useState(false);
+    const [faceCount, setFaceCount] = useState(0); // Lưu số lượng khuôn mặt
 
     const handleImageUpload = async (event) => {
         const file = event.target.files[0];
@@ -64,16 +65,34 @@ const FaceDetection = () => {
             const response = await axios.post('http://localhost:8800/face_recognition/detect', formData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
-            if (response.data.faces && response.data.faces.length > 0) {
-                setBoundingBoxes(response.data.faces);
-                setNoFaceDetected(false);
+
+            if (response.data.faces && response.data.confidences) {
+                const filteredBoxes = [];
+                response.data.faces.forEach((face, index) => {
+                    if (response.data.confidences[index] >= 0.9) {
+                        filteredBoxes.push(face);
+                    }
+                });
+
+                if (filteredBoxes.length > 0) {
+                    setBoundingBoxes(filteredBoxes);
+                    setFaceCount(filteredBoxes.length);
+                    setNoFaceDetected(false);
+                } else {
+                    setBoundingBoxes([]);
+                    setFaceCount(0);
+                    setNoFaceDetected(true);
+                }
             } else {
                 setBoundingBoxes([]);
                 setNoFaceDetected(true);
+                setFaceCount(0);
             }
         } catch (error) {
             console.error("Error detecting faces:", error);
+            setBoundingBoxes([]);
             setNoFaceDetected(true);
+            setFaceCount(0);
         }
     };
 
@@ -81,6 +100,7 @@ const FaceDetection = () => {
         setDisplayedImage(null);
         setBoundingBoxes([]);
         setNoFaceDetected(false);
+        setFaceCount(0);
     };
 
     return (
@@ -93,7 +113,7 @@ const FaceDetection = () => {
                 <Grid item xs={12} sm={6}>
                     <SubCard>
                         <Typography variant="body2" sx={{ marginBottom: 2 }}>
-                            <Typography component="span" sx={{ color: 'red', fontWeight: 'bold', fontSize: "22px" }}>
+                            <Typography component="span" sx={{ color: 'red', fontWeight: 'bold', fontSize: '22px' }}>
                                 Step 1:
                             </Typography>
                             <br />
@@ -110,11 +130,12 @@ const FaceDetection = () => {
                                         sx={{
                                             width: '100%',
                                             height: 'auto',
-                                            aspectRatio: '1 / 1',
+                                            aspectRatio: '1 / 1', // Duy trì tỷ lệ khung hình
                                             borderRadius: '8px',
                                             border: '2px solid red',
-                                            objectFit: 'cover',
-                                            cursor: 'pointer'
+                                            objectFit: 'contain', // Hiển thị vừa khung mà không bị cắt
+                                            cursor: 'pointer',
+                                            display: 'block', // Đảm bảo ảnh được hiển thị dưới dạng block để căn chỉnh chính xác
                                         }}
                                     />
                                 </Grid>
@@ -126,16 +147,31 @@ const FaceDetection = () => {
                 <Grid item xs={12} sm={6}>
                     <SubCard sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                         <Typography variant="body2" sx={{ marginBottom: 2 }}>
-                            <Typography component="span" sx={{ color: 'red', fontWeight: 'bold', fontSize: "22px"}}>
+                            <Typography component="span" sx={{ color: 'red', fontWeight: 'bold', fontSize: '22px' }}>
                                 Result
                             </Typography>
                         </Typography>
+
+                        {faceCount > 0 && (
+                            <Typography
+                                variant="body2"
+                                sx={{
+                                    color: 'green',
+                                    fontWeight: 'bold',
+                                    marginBottom: 1,
+                                    fontSize: '18px'
+                                }}
+                            >
+                                Faces Detected: {faceCount}
+                            </Typography>
+                        )}
+
                         <Box
                             sx={{
                                 position: 'relative',
                                 width: '500px',
                                 height: '500px',
-                                backgroundColor: displayedImage ? 'transparent' : '#333',
+                                backgroundColor: noFaceDetected ? '#fff' : (displayedImage ? 'transparent' : '#333'),
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
@@ -157,13 +193,33 @@ const FaceDetection = () => {
                                             onChange={handleImageUpload}
                                         />
                                     </IconButton>
-                                    <Typography variant="body2" sx={{ textAlign: 'center', marginTop: 1, color:"green", fontSize: "18x" }}>
+                                    <Typography variant="body2" sx={{ textAlign: 'center', marginTop: 1 }}>
                                         Upload Image or drag and drop in this space<br />
-                                        Image should not be beyond 200x200 PX
+                                        Image should not be beyond 500x500 PX
                                     </Typography>
                                 </Box>
                             ) : (
                                 <Box sx={{ position: 'relative', width: '100%', height: '100%' }}>
+                                    {noFaceDetected && (
+                                        <Typography
+                                            variant="h6"
+                                            sx={{
+                                                position: 'absolute',
+                                                top: '50%',
+                                                left: '50%',
+                                                transform: 'translate(-50%, -50%)',
+                                                color: 'red',
+                                                fontWeight: 'bold',
+                                                backgroundColor: 'rgba(255, 255, 255, 0.8)',
+                                                padding: '10px',
+                                                borderRadius: '8px',
+                                                fontSize: '20px'
+                                            }}
+                                        >
+                                            No Face Detected
+                                        </Typography>
+                                    )}
+
                                     <Box
                                         component="img"
                                         src={displayedImage}
@@ -174,6 +230,7 @@ const FaceDetection = () => {
                                             objectFit: 'contain'
                                         }}
                                     />
+
                                     {boundingBoxes.map((box, index) => (
                                         <Box
                                             key={index}
@@ -188,24 +245,7 @@ const FaceDetection = () => {
                                             }}
                                         />
                                     ))}
-                                    {noFaceDetected && (
-                                        <Typography
-                                            variant="h6"
-                                            sx={{
-                                                position: 'absolute',
-                                                top: '50%',
-                                                left: '50%',
-                                                transform: 'translate(-50%, -50%)',
-                                                color: 'red',
-                                                fontWeight: 'bold',
-                                                backgroundColor: 'rgba(255, 255, 255, 0.8)',
-                                                padding: '10px',
-                                                borderRadius: '8px'
-                                            }}
-                                        >
-                                            No Face Detected
-                                        </Typography>
-                                    )}
+
                                 </Box>
                             )}
                         </Box>
@@ -215,7 +255,7 @@ const FaceDetection = () => {
                                 variant="outlined"
                                 color="primary"
                                 onClick={handleStartOver}
-                                sx={{ marginTop: 1, borderRadius: '10px', fontSize: "18px", color: "red" }}
+                                sx={{ marginTop: 1, borderRadius: '10px', fontWeight: 'bold', fontSize: '18px' }}
                             >
                                 Start Over
                             </Button>

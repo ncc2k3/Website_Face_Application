@@ -16,8 +16,8 @@ class FaceRecognitionService:
         faces = DeepFace.extract_faces(
             img_path=image_path,
             detector_backend=self.detector,
-            enforce_detection = False,
-            align = False
+            enforce_detection = False,  # Không yêu cầu phát hiện khuôn mặt nếu ảnh đã chứa khuôn mặt
+            align = True
         )
 
         # Kiểm tra nếu không phát hiện khuôn mặt
@@ -35,4 +35,26 @@ class FaceRecognitionService:
                 "height": int(box["h"])
             })
 
-        return {"faces": bounding_boxes}
+        confidences = []
+        for face in faces:
+            confidences.append(face["confidence"])
+            
+        return {"faces": bounding_boxes, 'confidences': confidences}
+
+    def face_compares(self, image1_path, image2_path):
+        """
+        So sánh 2 ảnh và trả về độ giống nhau giữa chúng.
+        """
+        # Sử dụng DeepFace để so sánh 2 ảnh
+        result = DeepFace.verify(
+            image1_path=image1_path,
+            image2_path=image2_path,
+            model_name='Facenet',
+            detector_backend=self.detector
+        )
+
+        # Trả về kết quả so sánh
+        return {
+            "verified": result["verified"],
+            "distance": result["distance"]
+        }
