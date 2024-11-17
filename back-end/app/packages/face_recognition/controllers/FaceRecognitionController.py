@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify
 from app.packages.face_recognition.services.FaceRecognitionService import FaceRecognitionService
 import os
+import uuid
 
 face_recognition_blueprint = Blueprint('face_recognition', __name__)
 face_recognition_service = FaceRecognitionService()
@@ -20,14 +21,16 @@ def detect_face():
     # Lưu ảnh tạm để xử lý
     image_path = f"./app/images/{image_file.filename}"
     image_file.save(image_path)
-
-    # Phát hiện khuôn mặt và trả về tọa độ bounding box
-    result = face_recognition_service.detect_faces(image_path)
-
-    # Xóa ảnh tạm sau khi xử lý
-    os.remove(image_path)
     
-    return jsonify(result)
+    try:
+        # Phát hiện khuôn mặt và trả về tọa độ bounding box
+        result = face_recognition_service.detect_faces(image_path)
+        return jsonify(result), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+    finally:
+        # Xóa ảnh tạm sau khi xử lý
+        os.remove(image_path)
 
 # routes: /face_recognition/compare
 @face_recognition_blueprint.route('/compare', methods=['POST'])
@@ -42,17 +45,28 @@ def compare_faces():
     if not image1 or not image2:
         return jsonify({"message": "Two images are required"}), 400
 
-    # Lưu 2 ảnh tạm để xử lý
-    image1_path = f"./app/images/{image1.filename}"
-    image2_path = f"./app/images/{image2.filename}"
+    # Tạo tên tệp bằng UUID
+    image1_filename = f"{uuid.uuid4()}.jpg"
+    image2_filename = f"{uuid.uuid4()}.jpg"
+
+    # Đường dẫn để lưu ảnh tạm
+    image1_path = f"./app/images/{image1_filename}"
+    image2_path = f"./app/images/{image2_filename}"
+
+    # Lưu ảnh tạm
     image1.save(image1_path)
     image2.save(image2_path)
 
-    # So sánh 2 ảnh và trả về độ giống nhau
-    result = face_recognition_service.compare_faces(image1_path, image2_path)
+    try:
+        # So sánh 2 ảnh và trả về độ giống nhau
+        result = face_recognition_service.face_compares(image1_path, image2_path)
 
-    # Xóa 2 ảnh tạm sau khi xử lý
-    os.remove(image1_path)
-    os.remove(image2_path)
-
-    return jsonify(result)
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+    finally:
+        # Xóa 2 ảnh tạm sau khi xử lý
+        if os.path.exists(image1_path):
+            os.remove(image1_path)
+        if os.path.exists(image2_path):
+            os.remove(image2_path)

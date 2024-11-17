@@ -113,7 +113,7 @@ const FaceDetection = () => {
                 <Grid item xs={12} sm={6}>
                     <SubCard>
                         <Typography variant="body2" sx={{ marginBottom: 2 }}>
-                            <Typography component="span" sx={{ color: 'red', fontWeight: 'bold', fontSize: '22px' }}>
+                            <Typography component="span" sx={{ color: 'red', fontWeight: 'bold', fontSize: '20px' }}>
                                 Step 1:
                             </Typography>
                             <br />
@@ -185,7 +185,7 @@ const FaceDetection = () => {
                             {!displayedImage ? (
                                 <Box display="flex" flexDirection="column" alignItems="center">
                                     <IconButton color="primary" component="label">
-                                        <CloudUpload sx={{ fontSize: 250 }} />
+                                        <CloudUpload sx={{ fontSize: 200 }} />
                                         <input
                                             hidden
                                             accept="image/*"
@@ -193,7 +193,7 @@ const FaceDetection = () => {
                                             onChange={handleImageUpload}
                                         />
                                     </IconButton>
-                                    <Typography variant="body2" sx={{ textAlign: 'center', marginTop: 1 }}>
+                                    <Typography variant="body2" sx={{ textAlign: 'center', marginTop: 1, color: 'green', fontWeight: 'bold', fontSize: '20px' }}>
                                         Upload Image or drag and drop in this space<br />
                                         Image should not be beyond 500x500 PX
                                     </Typography>

@@ -22,7 +22,7 @@ class FaceRecognitionService:
 
         # Kiểm tra nếu không phát hiện khuôn mặt
         if not faces:
-            return {"message": "No faces detected"}, 200
+            return {"message": "No faces detected"}, 400
 
         # Tạo danh sách bounding box từ kết quả phát hiện
         bounding_boxes = []
@@ -46,15 +46,19 @@ class FaceRecognitionService:
         So sánh 2 ảnh và trả về độ giống nhau giữa chúng.
         """
         # Sử dụng DeepFace để so sánh 2 ảnh
-        result = DeepFace.verify(
-            image1_path=image1_path,
-            image2_path=image2_path,
-            model_name='Facenet',
-            detector_backend=self.detector
-        )
+        try:
+            result = DeepFace.verify(
+                image1_path,
+                image2_path,
+                model_name='VGG-Face',
+                enforce_detection=True # Yêu cầu phát hiện khuôn mặt trước khi so sánh
+            )
 
-        # Trả về kết quả so sánh
-        return {
-            "verified": result["verified"],
-            "distance": result["distance"]
-        }
+            # Trả về kết quả so sánh
+            return {
+                "verified": result["verified"],
+                "distance": result["distance"]
+            }
+        except Exception as e:
+            # Trả về lỗi nếu có vấn đề trong quá trình so sánh
+            return {"error": str(e)}, 400
