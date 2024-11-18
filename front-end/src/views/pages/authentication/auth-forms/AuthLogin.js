@@ -115,7 +115,13 @@ const FirebaseLogin = ({ ...others }) => {
         if (response.status === 200) {
           if (response.data.message === 'Login successful') {
             alert('Face ID login successful!');
-            navigate('/');
+            const firstName = response.data.first_name;
+            const lastName = response.data.last_name;
+
+            // console.log('First Name:', firstName);
+            localStorage.setItem('firstName', firstName);
+            localStorage.setItem('lastName', lastName);
+            navigate('/dashboard/default');  // Chuyển hướng đến trang Dashboard
           } else {
             alert(`Face ID does not match: ${response.data.message}`);
           }
@@ -276,11 +282,11 @@ const FirebaseLogin = ({ ...others }) => {
                 }
                 label="Remember me"
               />
-              <Typography 
-              variant="subtitle1" 
-              color="secondary" 
-              sx={{ textDecoration: 'none', cursor: 'pointer' }}
-              onClick={() => navigate('/pages/login/reset-password')}
+              <Typography
+                variant="subtitle1"
+                color="secondary"
+                sx={{ textDecoration: 'none', cursor: 'pointer' }}
+                onClick={() => navigate('/pages/login/reset-password')}
               >
                 Reset Password?
               </Typography>

@@ -106,17 +106,12 @@ const FaceDetection = () => {
     return (
         <MainCard title="Face Detection Demo">
             <Typography variant="body1" sx={{ fontSize: '1rem', marginBottom: 2, whiteSpace: 'pre-line' }}>
-                Face Detection allows you to find faces in an image.{"\n"}
-                Along with the position of the faces, Face Detection also provides key points (eyes, nose, mouth) for each face.
+                Face Detection allows you to find faces in an image.
             </Typography>
             <Grid container spacing={2}>
                 <Grid item xs={12} sm={6}>
-                    <SubCard>
+                    <SubCard title='Step 1'>
                         <Typography variant="body2" sx={{ marginBottom: 2 }}>
-                            <Typography component="span" sx={{ color: 'red', fontWeight: 'bold', fontSize: '20px' }}>
-                                Step 1:
-                            </Typography>
-                            <br />
                             Select from the following sample or upload your own image
                         </Typography>
                         <Grid container spacing={2}>
@@ -145,13 +140,7 @@ const FaceDetection = () => {
                 </Grid>
 
                 <Grid item xs={12} sm={6}>
-                    <SubCard sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                        <Typography variant="body2" sx={{ marginBottom: 2 }}>
-                            <Typography component="span" sx={{ color: 'red', fontWeight: 'bold', fontSize: '22px' }}>
-                                Result
-                            </Typography>
-                        </Typography>
-
+                    <SubCard title='Result'>
                         {faceCount > 0 && (
                             <Typography
                                 variant="body2"
@@ -185,7 +174,7 @@ const FaceDetection = () => {
                             {!displayedImage ? (
                                 <Box display="flex" flexDirection="column" alignItems="center">
                                     <IconButton color="primary" component="label">
-                                        <CloudUpload sx={{ fontSize: 200 }} />
+                                        <CloudUpload sx={{ fontSize: 150 }} />
                                         <input
                                             hidden
                                             accept="image/*"
@@ -193,9 +182,9 @@ const FaceDetection = () => {
                                             onChange={handleImageUpload}
                                         />
                                     </IconButton>
-                                    <Typography variant="body2" sx={{ textAlign: 'center', marginTop: 1, color: 'green', fontWeight: 'bold', fontSize: '20px' }}>
+                                    <Typography variant="body2" sx={{ textAlign: 'center', marginTop: 1, color: 'white', fontSize: '16px' }}>
                                         Upload Image or drag and drop in this space<br />
-                                        Image should not be beyond 500x500 PX
+                                        Image should not be beyond 500x500 px.
                                     </Typography>
                                 </Box>
                             ) : (
@@ -255,7 +244,7 @@ const FaceDetection = () => {
                                 variant="outlined"
                                 color="primary"
                                 onClick={handleStartOver}
-                                sx={{ marginTop: 1, borderRadius: '10px', fontWeight: 'bold', fontSize: '18px' }}
+                                sx={{ marginTop: 1, borderRadius: '8px', fontWeight: 'bold', fontSize: '18px' }}
                             >
                                 Start Over
                             </Button>

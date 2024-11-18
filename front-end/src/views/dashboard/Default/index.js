@@ -1,58 +1,78 @@
-import { useEffect, useState } from 'react';
-
-// material-ui
-import { Grid } from '@mui/material';
-
-// project imports
-import EarningCard from './EarningCard';
-import PopularCard from './PopularCard';
-import TotalOrderLineChartCard from './TotalOrderLineChartCard';
-import TotalIncomeDarkCard from './TotalIncomeDarkCard';
-import TotalIncomeLightCard from './TotalIncomeLightCard';
-import TotalGrowthBarChart from './TotalGrowthBarChart';
-import { gridSpacing } from 'store/constant';
-
-// ==============================|| DEFAULT DASHBOARD ||============================== //
+import React from 'react';
+import { Box } from '@mui/material';
 
 const Dashboard = () => {
-  const [isLoading, setLoading] = useState(true);
-  useEffect(() => {
-    setLoading(false);
-  }, []);
-
+  const firstName = localStorage.getItem('firstName') || '';
+  const lastName = localStorage.getItem('lastName') || '';
+  const text = `Hello, ${firstName + ' ' + lastName || 'Guest'}!`;
+  const text1 = "Welcome to my face application.";
   return (
-    <Grid container spacing={gridSpacing}>
-      <Grid item xs={12}>
-        <Grid container spacing={gridSpacing}>
-          <Grid item lg={4} md={6} sm={6} xs={12}>
-            <EarningCard isLoading={isLoading} />
-          </Grid>
-          <Grid item lg={4} md={6} sm={6} xs={12}>
-            <TotalOrderLineChartCard isLoading={isLoading} />
-          </Grid>
-          <Grid item lg={4} md={12} sm={12} xs={12}>
-            <Grid container spacing={gridSpacing}>
-              <Grid item sm={6} xs={12} md={6} lg={12}>
-                <TotalIncomeDarkCard isLoading={isLoading} />
-              </Grid>
-              <Grid item sm={6} xs={12} md={6} lg={12}>
-                <TotalIncomeLightCard isLoading={isLoading} />
-              </Grid>
-            </Grid>
-          </Grid>
-        </Grid>
-      </Grid>
-      <Grid item xs={12}>
-        <Grid container spacing={gridSpacing}>
-          <Grid item xs={12} md={8}>
-            <TotalGrowthBarChart isLoading={isLoading} />
-          </Grid>
-          <Grid item xs={12} md={4}>
-            <PopularCard isLoading={isLoading} />
-          </Grid>
-        </Grid>
-      </Grid>
-    </Grid>
+    <Box
+      sx={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: '500px',
+        backgroundImage: 'url("/path/to/your/background.jpg")', // Replace with your image path
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        color: 'black',
+        textAlign: 'center',
+        // overflow: 'hidden',
+        flexDirection: 'column', // Set the layout to column to handle multi-line text
+      }}
+    >
+      <Box
+        sx={{
+          display: 'inline-flex',
+          fontWeight: 'bold',
+          marginTop: '100px', // Add spacing between the lines
+          fontSize: '48px',
+          textShadow: '2px 2px 4px rgba(0, 0, 0, 0.5)',
+          '@keyframes wave': {
+            '0%, 100%': { transform: 'translateY(0)' },
+            '50%': { transform: 'translateY(-15px)' },
+          },
+        }}
+      >
+        {text.split("").map((char, index) => (
+          <Box
+            key={index}
+            component="span"
+            sx={{
+              display: 'inline-block',
+              animation: `wave 1.5s infinite`,
+              animationDelay: `${index * 0.1}s`, // Delay for each letter
+            }}
+          >
+            {char === " " ? "\u00A0" : char} {/* Handle spaces */}
+          </Box>
+        ))}
+      </Box>
+      <Box
+        sx={{
+          display: 'inline-flex',
+          fontWeight: 'bold',
+          fontSize: '48px',
+          marginTop: '100px', // Add spacing between the lines
+          textShadow: '1px 1px 2px rgba(0, 0, 0, 0.5)',
+        }}
+      >
+        {text1.split("").map((char, index) => (
+          <Box
+            key={index}
+            component="span"
+            sx={{
+              display: 'inline-block',
+              animation: `wave 1.5s infinite`,
+              animationDelay: `${(index + text.length) * 0.1}s`, // Delay for each letter
+            }}
+          >
+            {char === " " ? "\u00A0" : char} {/* Handle spaces */}
+          </Box>
+        ))}
+      </Box>
+    </Box>
   );
 };
 

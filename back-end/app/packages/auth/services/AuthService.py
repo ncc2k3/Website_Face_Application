@@ -70,7 +70,7 @@ class AuthService(BaseService):
         
         if user and user.check_password(password):
             session['user_id'] = user.id
-            return jsonify({'message': 'Login successful', 'user_id': user.id}), 200
+            return jsonify({'message': 'Login successful', 'user_id': user.id, 'first_name': user.first_name, 'last_name': user.last_name}), 200
 
         return jsonify({'error': 'Invalid email or password'}), 400
     
@@ -95,7 +95,7 @@ class AuthService(BaseService):
                 
                 if result[0]:  
                     os.remove(temp_image_path)
-                    return jsonify({"message": "Login successful", "user": user.email}), 200
+                    return jsonify({"message": "Login successful", "user": user.email, 'first_name': user.first_name, 'last_name': user.last_name}), 200
         
         os.remove(temp_image_path)
         return jsonify({"message": "Face ID does not match"}), 400

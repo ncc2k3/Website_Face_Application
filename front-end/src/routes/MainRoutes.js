@@ -20,6 +20,7 @@ const SamplePage = Loadable(lazy(() => import('views/sample-page')));
 // faces routing
 const FacesDetection = Loadable(lazy(() => import('views/faces/face_detection')));
 const FacesComparision = Loadable(lazy(() => import('views/faces/face_comparision')));
+import { Navigate } from 'react-router-dom';
 
 // ==============================|| MAIN ROUTING ||============================== //
 
@@ -28,8 +29,8 @@ const MainRoutes = {
   element: <MainLayout />,
   children: [
     {
-      path: '/',
-      element: <DashboardDefault />
+      path: '/', // Chuyển hướng từ root
+      element: <Navigate to="/pages/login/login3" />
     },
     {
       path: 'dashboard',
@@ -40,7 +41,7 @@ const MainRoutes = {
         }
       ]
     },
-    
+
     // faces routing
     {
       path: 'faces',

@@ -83,6 +83,7 @@ const FaceComparison = () => {
             }
 
             const { verified, distance } = response.data;
+            console.log(verified, distance);
             const score = ((1 - distance) * 100).toFixed(2); // Convert to percentage
 
             if (score >= 66) {
@@ -146,7 +147,7 @@ const FaceComparison = () => {
                         >
                             {!firstImage ? (
                                 <IconButton color="primary" component="label">
-                                    <CloudUpload sx={{ fontSize: 60 }} />
+                                    <CloudUpload sx={{ fontSize: 90 }} />
                                     <input
                                         hidden
                                         accept="image/*"
@@ -194,7 +195,7 @@ const FaceComparison = () => {
                         >
                             {!secondImage ? (
                                 <IconButton color="primary" component="label">
-                                    <CloudUpload sx={{ fontSize: 60 }} />
+                                    <CloudUpload sx={{ fontSize: 90 }} />
                                     <input
                                         hidden
                                         accept="image/*"
@@ -251,7 +252,7 @@ const FaceComparison = () => {
                                     {error}
                                 </Typography>
                             ) : (
-                                <Typography variant="h6" sx={{ color: '#fff' }}>
+                                <Typography variant="h2" sx={{ color: '#fff', fontSize: '30px' }}>
                                     ...
                                 </Typography>
                             )}
@@ -277,7 +278,7 @@ const FaceComparison = () => {
             </Grid>
 
             {/* Custom Dialog */}
-            <CustomDialog open={dialogOpen} onClose={reset} message={error} />
+            <CustomDialog open={dialogOpen} onClose={reset} />
 
         </MainCard>
     );
