@@ -51,6 +51,9 @@ const ProfileSection = () => {
   const anchorRef = useRef(null);
   const handleLogout = async () => {
     console.log('Logout');
+    // Xóa dữ liệu lưu trong localStorage
+    localStorage.removeItem('firstName');
+    localStorage.removeItem('lastName');
     navigate('/pages/login/login3');
   };
 
