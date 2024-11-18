@@ -3,7 +3,7 @@ from deepface import DeepFace
 
 class FaceRecognitionService:
     def __init__(self):
-        self.detector = 'yunet'  # Sử dụng YuNet làm detector trong DeepFace
+        self.detector = 'opencv'  # Sử dụng YuNet làm detector trong DeepFace
 
     def detect_faces(self, image_path):
         """
@@ -50,14 +50,18 @@ class FaceRecognitionService:
             result = DeepFace.verify(
                 image1_path,
                 image2_path,
-                model_name='VGG-Face',
+                model_name='SFace',
+                detector_backend=self.detector,
+                # metric: cosine, euclidean, euclidean_l2
+                # distance_metric='euclidean_l2',
                 enforce_detection=True # Yêu cầu phát hiện khuôn mặt trước khi so sánh
             )
 
             # Trả về kết quả so sánh
             return {
                 "verified": result["verified"],
-                "distance": result["distance"]
+                "distance": result["distance"],
+                'threshold': result['threshold'],
             }
         except Exception as e:
             # Trả về lỗi nếu có vấn đề trong quá trình so sánh

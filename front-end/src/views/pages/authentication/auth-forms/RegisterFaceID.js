@@ -45,7 +45,9 @@ const RegisterFaceID = () => {
                     alert('Face ID registered successfully!');
                     setImageSrc(capturedImage);
                     setProcessingDone(true);
-                    navigate('/dashboard');  // Chuyển về trang chủ
+
+
+                    navigate('/pages/login/login3');  // Chuyển về đăng nhập
                 } else {
                     alert(`Failed to register Face ID: ${response.data.message}`);
                 }
