@@ -1,48 +1,37 @@
-from app.config.Database import userdb
-from flask_bcrypt import generate_password_hash, check_password_hash
-import face_recognition
-from sqlalchemy import LargeBinary
-import numpy as np
-import faiss
+from flask_bcrypt import check_password_hash, generate_password_hash
 
-# FAISS index và user mapping
-dimension = 128  # Độ chiều của face_encoding
-faiss_index = faiss.IndexFlatL2(dimension)  # Sử dụng L2 distance
-user_mapping = {}  # Để map FAISS index với user_id
-
-
-class User(userdb.Model):
-    first_name = userdb.Column(userdb.String(150), nullable=False)
-    last_name = userdb.Column(userdb.String(150), nullable=False)
-    id = userdb.Column(userdb.Integer, primary_key=True)
-    email = userdb.Column(userdb.String(150), unique=True, nullable=False)
-    password = userdb.Column(userdb.String(150), nullable=False)
-    face_encoding = userdb.Column(LargeBinary)
-
-    def __init__(self, first_name, last_name, email, password):
+class User:
+    __tablename__ = "users"
+    
+    def __init__(self, id=None, first_name=None, last_name=None, email=None, password=None, face_encoding=None):
+        self.id = id
         self.first_name = first_name
         self.last_name = last_name
         self.email = email
-        # Mã hóa mật khẩu trước khi lưu vào DB
-        self.set_password(password)
+        self.password = password
+        self.face_encoding = face_encoding
 
-    # Kiểm tra mật khẩu
-    def check_password(self, password):
-        return check_password_hash(self.password, password)
+    def to_insert_query(self):
+        query = '''
+            INSERT INTO users (first_name, last_name, email, password, face_encoding)
+            VALUES (%s, %s, %s, %s, %s)
+            RETURNING id;
+        '''
+        values = (self.first_name, self.last_name, self.email, self.password, self.face_encoding)
+        return query, values
     
-    # Set password
+    def to_update_query(self, update_values):
+        set_clause = ', '.join([f"{key} = %s" for key in update_values.keys()])
+        query = f'''
+            UPDATE users SET {set_clause} WHERE email = %s;
+        '''
+        values = list(update_values.values()) + [self.email]
+        return query, values
+
     def set_password(self, password):
+        """Mã hóa mật khẩu và lưu vào thuộc tính `password`"""
         self.password = generate_password_hash(password).decode('utf8')
 
-    # Set face_encoding và lưu vào FAISS
-    def set_face_encoding(self, face_encoding):
-        self.face_encoding = face_encoding.tobytes()  # Lưu dưới dạng nhị phân
-        self.add_face_to_faiss(face_encoding)
-
-    # Hàm thêm encoding vào FAISS index
-    @staticmethod
-    def add_face_to_faiss(face_encoding, user_id):
-        global faiss_index, user_mapping
-        face_vector = np.array(face_encoding, dtype=np.float32).reshape(1, -1)
-        faiss_index.add(face_vector)
-        user_mapping[faiss_index.ntotal - 1] = user_id  # Liên kết FAISS index với user_id
+    def check_password(self, password):
+        """So sánh mật khẩu đã nhập với mật khẩu đã mã hóa trong cơ sở dữ liệu"""
+        return check_password_hash(self.password, password)

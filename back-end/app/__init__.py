@@ -1,24 +1,19 @@
 from flask import Flask
 from app.packages.auth.controllers.AuthController import auth_blueprint
+from app.packages.face_recognition.controllers.FaceRecognitionController import face_recognition_blueprint
 from app.controllers import *
-from flask_sqlalchemy import SQLAlchemy
-from app.config.Database import userdb
-from flask_cors import CORS, cross_origin
+from flask_cors import CORS
 from app.config.AppConfig import Config
 from app.controllers.hello import index_blueprint
 
 def create_app():
     app = Flask(__name__)
     
-    # Cấu hình cho app, bao gồm kết nối database
-    app.config['SQLALCHEMY_DATABASE_URI'] = Config.SQLALCHEMY_DATABASE_URI
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = Config.SQLALCHEMY_TRACK_MODIFICATIONS
+    # Cấu hình cho app
     app.config['SECRET_KEY'] = Config.SECRET_KEY
     
-    CORS(app,supports_credentials=True)
-    
-    # Khởi tạo các thành phần mở rộng
-    userdb.init_app(app)
+    # Kích hoạt CORS
+    CORS(app, supports_credentials=True)
     
     with app.app_context():
         # Route index
@@ -27,9 +22,6 @@ def create_app():
         # Đăng ký các Blueprint hoặc các route khác nếu cần
         app.register_blueprint(auth_blueprint, url_prefix='/auth')
         
-        # Tạo database nếu cần
-        userdb.create_all()
-
+        app.register_blueprint(face_recognition_blueprint, url_prefix='/face_recognition')
+    
     return app
-
-

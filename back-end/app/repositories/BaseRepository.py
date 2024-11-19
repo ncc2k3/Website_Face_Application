@@ -1,15 +1,15 @@
-
-from app.config.Database import userdb
+from app.config.Database import get_connection
 
 class BaseRepository:
-    def __init__(self, model, session):
-        # print("Base repo")
+    def __init__(self, model):
         self.model = model
-        self.session = session
-    
-    def add(self, instance):
-        userdb.session.add(instance)
-        userdb.session.commit()
 
-    def update(self):
-        userdb.session.commit()
+    def find_by_id(self, id):
+        with get_connection() as conn:
+            with conn.cursor() as cursor:
+                query = f"SELECT * FROM {self.model.__tablename__} WHERE id = %s"
+                cursor.execute(query, (id,))
+                record = cursor.fetchone()
+                if record:
+                    return self.model(*record)
+                return None
