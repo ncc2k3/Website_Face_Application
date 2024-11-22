@@ -66,3 +66,46 @@ class FaceRecognitionService:
         except Exception as e:
             # Trả về lỗi nếu có vấn đề trong quá trình so sánh
             return {"error": str(e)}, 400
+        
+    
+    def liveness_detection(self, image_path):
+        """
+        Kiểm tra liveness và chống giả mạo (anti-spoofing) từ ảnh đầu vào.
+        """
+        try:
+            # Kiểm tra ảnh có hợp lệ không
+            img = cv2.imread(image_path)
+            if img is None:
+                raise ValueError("Image could not be loaded. Check the file path.")
+
+            # Gọi hàm extract_faces để phân tích khuôn mặt
+            faces = DeepFace.extract_faces(
+                img_path=image_path,
+                detector_backend=self.detector,  # Bộ phát hiện khuôn mặt (opencv, mtcnn, ...)
+                enforce_detection=True,          # Bắt buộc phát hiện khuôn mặt
+                align=True,                      # Căn chỉnh khuôn mặt
+                anti_spoofing=True               # Kích hoạt kiểm tra chống giả mạo
+            )
+
+            # Nếu không phát hiện khuôn mặt
+            if not faces:
+                return {"message": "No faces detected", "liveness": False, "spoofing": None}, 400
+
+            # Duyệt qua các khuôn mặt được phát hiện
+            results = []
+            for face in faces:
+                is_real = face.get("is_real", None)  # Trạng thái chống giả mạo
+                spoof_score = face.get("antispoof_score", None)  # Điểm số chống giả mạo
+                confidence = face.get("confidence", None)  # Độ tin cậy phát hiện khuôn mặt
+
+                # Nếu kết quả hợp lệ, trả về trạng thái
+                results.append({
+                    "confidence": confidence,
+                    "liveness": is_real,
+                    "spoofing_score": spoof_score
+                })
+
+            return {"message": "Liveness detection completed", "results": results}, 200
+
+        except Exception as e:
+            return {"error": str(e)}, 400
