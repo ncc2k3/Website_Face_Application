@@ -4,6 +4,7 @@ import { CloudUpload } from '@mui/icons-material';
 import MainCard from 'ui-component/cards/MainCard';
 import SubCard from 'ui-component/cards/SubCard';
 import axios from 'axios';
+import CustomDialog from 'ui-component/CustomDialog';
 
 const sampleImages = [
     { id: 1, src: require('../../assets/images/face/Angelina-Jolie_fake.png'), alt: 'Sample 1' },
@@ -21,14 +22,35 @@ const LivenessDetection = () => {
     const [selectedImage, setSelectedImage] = useState(null); // Selected sample or uploaded image
     const [livenessResult, setLivenessResult] = useState(null); // Liveness detection result
     const [errorMessage, setErrorMessage] = useState(''); // Error message
+    const [noFaceDetected, setNoFaceDetected] = useState(false); // No face detected flag
+    const [dialogOpen, setDialogOpen] = useState(false); // Trạng thái mở form thông báo
 
-    // Handle sample image click
-    const handleSampleImageClick = async (imageSrc) => {
-        setSelectedImage(imageSrc);
-        checkLiveness(imageSrc);
+    // Hàm xử lý liveness detection
+    const processLivenessDetection = async (data) => {
+        try {
+            const response = await axios.post('http://localhost:8800/face_recognition/liveness_detection', data, {
+                headers: { 'Content-Type': 'multipart/form-data' },
+            });
+
+            if (response.data.results && response.data.results.length > 0) {
+                const { liveness, spoofing_score } = response.data.results[0];
+                setLivenessResult(liveness === true && spoofing_score > 0.9 ? 'Liveness Passed' : 'Spoofing Detected');
+                setNoFaceDetected(false);
+                setErrorMessage('');
+            } else {
+                setNoFaceDetected(true);
+                setLivenessResult(null);
+                setErrorMessage('');
+            }
+        } catch (error) {
+            setLivenessResult(null);
+            setDialogOpen(true);
+            setErrorMessage('Error processing liveness detection. Please try again.');
+            setNoFaceDetected(false);
+        }
     };
 
-    // Handle image upload
+    // Hàm upload ảnh
     const handleImageUpload = async (event) => {
         const file = event.target.files[0];
         if (file) {
@@ -38,37 +60,36 @@ const LivenessDetection = () => {
             const formData = new FormData();
             formData.append('image', file);
 
-            try {
-                const response = await axios.post('http://localhost:8800/liveness_detection', formData, {
-                    headers: { 'Content-Type': 'multipart/form-data' },
-                });
-
-                setLivenessResult(response.data.liveness ? 'Real' : 'Spoof');
-                setErrorMessage('');
-            } catch (error) {
-                setLivenessResult(null);
-                setErrorMessage('Error processing liveness detection. Please try again.');
-            }
+            await processLivenessDetection(formData);
         }
     };
 
-    // Check liveness for a sample image
-    const checkLiveness = async (imageSrc) => {
+    // Hàm chọn ảnh mẫu
+    const handleSampleImageClick = async (imageSrc) => {
+        setSelectedImage(imageSrc);
+
         try {
-            const response = await axios.post('http://localhost:8800/liveness_detection', { image: imageSrc });
-            setLivenessResult(response.data.liveness ? 'Real' : 'Spoof');
-            setErrorMessage('');
+            const response = await axios.get(imageSrc, { responseType: 'blob' });
+            const file = new File([response.data], 'sampleImage.jpg', { type: 'image/jpeg' });
+
+            const formData = new FormData();
+            formData.append('image', file);
+
+            await processLivenessDetection(formData);
         } catch (error) {
             setLivenessResult(null);
             setErrorMessage('Error processing liveness detection. Please try again.');
+            setNoFaceDetected(false);
         }
     };
 
-    // Reset the state
+    // Reset trạng thái
     const resetLiveness = () => {
         setSelectedImage(null);
         setLivenessResult(null);
         setErrorMessage('');
+        setDialogOpen(false);
+        setNoFaceDetected(false);
     };
 
     return (
@@ -121,7 +142,7 @@ const LivenessDetection = () => {
                             }}
                         >
                             {/* Conditionally show the upload button */}
-                            {!livenessResult && !selectedImage && (
+                            {!selectedImage && (
                                 <IconButton
                                     color="primary"
                                     component="label"
@@ -145,15 +166,19 @@ const LivenessDetection = () => {
                                             marginBottom: '16px',
                                         }}
                                     />
-                                    {livenessResult ? (
+                                    {noFaceDetected ? (
+                                        <Typography variant="h5" sx={{ color: 'red', fontWeight: 'bold' }}>
+                                            No Face Detected
+                                        </Typography>
+                                    ) : livenessResult ? (
                                         <Typography
                                             variant="h5"
                                             sx={{
                                                 fontWeight: 'bold',
-                                                color: livenessResult === 'Real' ? 'green' : 'red',
+                                                color: livenessResult === 'Liveness Passed' ? 'green' : 'red',
                                             }}
                                         >
-                                            {livenessResult === 'Real' ? 'Real Person' : 'Spoof Detected'}
+                                            {livenessResult}
                                         </Typography>
                                     ) : errorMessage ? (
                                         <Typography variant="body1" sx={{ color: 'red', fontWeight: 'bold' }}>
@@ -184,6 +209,8 @@ const LivenessDetection = () => {
                     </SubCard>
                 </Grid>
             </Grid>
+            {/* Custom Dialog */}
+            <CustomDialog open={dialogOpen} onClose={resetLiveness} />
         </MainCard>
     );
 };
