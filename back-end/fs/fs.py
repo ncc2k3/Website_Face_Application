@@ -93,7 +93,7 @@ def query(cur, target_emb, target_img):
         ORDER BY distance;
     """
     )
-    return cur.fetchall()[0]
+    return cur.fetchall()
 
 
 def face_search(target_path, cur):
