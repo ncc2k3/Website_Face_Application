@@ -111,7 +111,7 @@ const FaceDetection = () => {
             <Grid container spacing={2}>
                 <Grid item xs={12} sm={6}>
                     <SubCard title='Step 1'>
-                        <Typography variant="body2" sx={{ marginBottom: 2 }}>
+                        <Typography variant="body2" sx={{ color: 'red', fontWeight: 'bold', marginBottom: 2 }}>
                             Select from the following sample or upload your own image
                         </Typography>
                         <Grid container spacing={2}>

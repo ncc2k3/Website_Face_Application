@@ -82,11 +82,11 @@ const FaceComparison = () => {
                 return;
             }
 
-            const { verified, distance } = response.data;
-            console.log(verified, distance);
+            const { verified, distance, threshold } = response.data;
+            console.log(verified, distance, threshold);
             const score = ((1 - distance) * 100).toFixed(2); // Convert to percentage
-
-            if (score >= 66) {
+            console.log(score);
+            if (score >= 60) {
                 setComparisonResult({
                     matched: verified,
                     score: `${score}%`,
@@ -223,7 +223,7 @@ const FaceComparison = () => {
                 <Grid item xs={12} sm={4}>
                     <SubCard title="Result">
                         <Typography variant="body2" sx={{ color: 'red', fontWeight: 'bold' }}>
-                            Score of 66% or more is a match
+                            Score of 60% or more is a match
                         </Typography>
                         <Box
                             sx={{
@@ -242,7 +242,7 @@ const FaceComparison = () => {
                             }}
                         >
                             {comparisonResult ? (
-                                <Typography variant="h6" sx={{ color: comparisonResult.matched ? 'green' : 'red' }}>
+                                <Typography variant="h2" sx={{ color: comparisonResult.matched ? 'white ' : 'red' }}>
                                     {comparisonResult.matched
                                         ? `Matched! Score: ${comparisonResult.score}`
                                         : `Not Matched!`}

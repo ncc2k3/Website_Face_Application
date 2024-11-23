@@ -70,3 +70,62 @@ def compare_faces():
             os.remove(image1_path)
         if os.path.exists(image2_path):
             os.remove(image2_path)
+            
+# routes: /face_recognition/liveness
+@face_recognition_blueprint.route('/liveness_detection', methods=['POST'])
+def liveness_detection():
+    """
+    Endpoint để kiểm tra liveness của ảnh.
+    """
+    image_file = request.files.get('image')
+
+    if not image_file:
+        return jsonify({"message": "No image provided"}), 400
+
+    # Tạo tên tệp bằng UUID
+    image_filename = f"{uuid.uuid4()}.jpg"
+    image_path = f"./app/images/{image_filename}"
+
+    # Lưu ảnh tạm
+    image_file.save(image_path)
+
+    try:
+        # Gọi hàm liveness detection
+        result, status_code = face_recognition_service.liveness_detection(image_path)
+        return jsonify(result), status_code
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        # Xóa ảnh tạm sau khi xử lý
+        if os.path.exists(image_path):
+            os.remove(image_path)
+
+
+# routes: /face_recognition/search
+@face_recognition_blueprint.route('/search', methods=['POST'])
+def search_face():
+    """
+    Endpoint để tiìm kiếm khuôn mặt trong ảnh.
+    """
+    image_file = request.files.get('image')
+
+    if not image_file:
+        return jsonify({"message": "No image provided"}), 400
+
+    # Tạo tên tệp bằng UUID
+    image_filename = f"{uuid.uuid4()}.jpg"
+    image_path = f"./app/images/{image_filename}"
+
+    # Lưu ảnh tạm
+    image_file.save(image_path)
+
+    try:
+        # Gọi hàm search face
+        result, status_code = face_recognition_service.face_search(image_path)
+        return jsonify(result), status_code
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        # Xóa ảnh tạm sau khi xử lý
+        if os.path.exists(image_path):
+            os.remove(image_path)
