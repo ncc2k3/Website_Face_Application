@@ -76,6 +76,8 @@ class FaceRecognitionService:
         try:
             # Kiểm tra ảnh có hợp lệ không
             img = cv2.imread(image_path)
+            
+            
             if img is None:
                 raise ValueError("Image could not be loaded. Check the file path.")
 
@@ -84,7 +86,6 @@ class FaceRecognitionService:
                 img_path=image_path,
                 detector_backend=self.detector,  # Bộ phát hiện khuôn mặt (opencv, mtcnn, ...)
                 enforce_detection=True,          # Bắt buộc phát hiện khuôn mặt
-                align=True,                      # Căn chỉnh khuôn mặt
                 anti_spoofing=True               # Kích hoạt kiểm tra chống giả mạo
             )
 
@@ -103,9 +104,8 @@ class FaceRecognitionService:
                 results.append({
                     "confidence": confidence,
                     "liveness": is_real,
-                    "spoofing_score": spoof_score
+                    "spoofing_score": spoof_score # True - score- 0.99
                 })
-
             return {"message": "Liveness detection completed", "results": results}, 200
 
         except Exception as e:
