@@ -116,17 +116,17 @@ if __name__ == "__main__":
         )
         cur = conn.cursor()
 
-        # Drop and recreate table
-        drop_table(cur)
-        create_table(cur)
+        # # Drop and recreate table
+        # drop_table(cur)
+        # create_table(cur)
 
-        # Collect and insert embeddings
-        image_dir = "C:/Users/Admin/Documents/CV/deepface/tests/dataset"
-        representations = get_embeddings(image_dir)
-        if representations:
-            insert_data(cur, representations)
-            conn.commit()
-            logging.info("Embeddings inserted successfully.")
+        # # Collect and insert embeddings
+        # image_dir = "C:/Users/Admin/Documents/CV/deepface/tests/dataset"
+        # representations = get_embeddings(image_dir)
+        # if representations:
+        #     insert_data(cur, representations)
+        #     conn.commit()
+        #     logging.info("Embeddings inserted successfully.")
 
         # Perform face search
         target_img = "C:/Users/Admin/Documents/CV/deepface/tests/dataset/img1.jpg"
