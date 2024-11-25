@@ -1,6 +1,7 @@
 from app.repositories.BaseRepository import BaseRepository
 from app.config.Database import get_connection
 from app.packages.auth.models.User import User
+import json
 
 class UserRepository(BaseRepository):
     def __init__(self):
@@ -10,8 +11,8 @@ class UserRepository(BaseRepository):
     def find_by_email(self, email):
         with get_connection() as conn:
             with conn.cursor() as cursor:
-                # Đảm bảo thứ tự cột đúng: id, first_name, last_name, email, password, face_encoding
-                cursor.execute("SELECT id, first_name, last_name, email, password, face_encoding FROM users WHERE email = %s", (email,))
+                # Đảm bảo thứ tự cột đúng: id, first_name, last_name, email, password, created_at
+                cursor.execute("SELECT user_id, first_name, last_name, email, password, created_at FROM users WHERE email = %s", (email,))
                 user_data = cursor.fetchone()
                 if user_data:
                     # Khởi tạo User với đúng thứ tự giá trị
@@ -24,9 +25,20 @@ class UserRepository(BaseRepository):
         with get_connection() as conn:
             with conn.cursor() as cursor:
                 cursor.execute(query, values)
-                user_instance.id = cursor.fetchone()[0]  # PostgreSQL tự động gán id mới
+                user_instance.user_id = cursor.fetchone()[0]  # PostgreSQL tự động gán id mới
                 conn.commit()
                 
+    # Thêm khuôn mặt vào bảng Faces
+    def add_face(self, user_id, image_name, image_path, embedding):
+        """Thêm một khuôn mặt vào bảng Faces."""
+        with get_connection() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute("""
+                INSERT INTO Faces (user_id, image_name, image_path, embedding)
+                VALUES (%s, %s, %s, %s);
+                """, (user_id, image_name, image_path, json.dumps(embedding)))
+                conn.commit()
+    
     # Cập nhật user
     def update_user(self, instance, update_values):
         query, values = instance.to_update_query(update_values)

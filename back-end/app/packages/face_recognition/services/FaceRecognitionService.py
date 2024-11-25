@@ -1,5 +1,10 @@
 import cv2
 from deepface import DeepFace
+from app.config.Database import get_connection
+from scipy.spatial.distance import cosine
+import numpy as np
+import base64
+import os
 
 class FaceRecognitionService:
     def __init__(self):
@@ -111,82 +116,107 @@ class FaceRecognitionService:
         except Exception as e:
             return {"error": str(e)}, 400
 
-    def face_search(self, image_path,threshold=10.734):
+    def get_embeddings_from_db(self):
         """
-        Tiìm kiếm khuôn mặt trong ảnh và trả về danh sách khuôn mặt phân tích.
+        Truy xuất embeddings từ cơ sở dữ liệu PostgreSQL.
         """
-        # Sử dụng DeepFace để tiìm kiếm khuôn mặt trong ảnh
-
-        target_emb = self.get_face_embedding(image_path)
-        if not target_emb:
-            return []
-
-        # Trả về danh sách khuôn mặt phân tích
-        results = self.query(target_emb,threshold)
-
-        if len(results) == 0:
-            return []
-        
-        return results[0]
-
-    def get_face_embedding(self, image_path):
-        """
-        Lấy embedding ảnh khuôn mặt.
-        """
-        # Sử dụng DeepFace để lấy embedding ảnh khuôn mặt
-
+        conn = get_connection()
+        cursor = conn.cursor()
         try:
-            try:
-                img_objs = DeepFace.extract_faces(
-                    img_path=image_path,
-                    detector_backend=self.detector,
-                    align=True,
-                    grayscale=False,
-                )
-            except ValueError as e:
-                # logging.error(f"Failed to extract faces for {image_path}: {e}")
-                img_objs = []
-
-            if len(img_objs) != 0:
-                img_content = img_objs[0]["face"]
-                embedding = DeepFace.represent(
-                    img_content, model_name=self.model, detector_backend="skip"
-                )[0]["embedding"]
-                return embedding
-
-            else:
-                return None
+            cursor.execute("SELECT face_id, user_id, embedding FROM Faces;")
+            data = cursor.fetchall()
             
-        except Exception as e:
-            # logging.error(f"Failed to get embedding for {image_path}: {e}")
-            return None
-        
-    def query(self, cur, target_emb, threshold):
+            # Chuyển đổi embedding JSON sang numpy array
+            embeddings = [
+                {
+                    "face_id": row[0],
+                    "user_id": row[1],
+                    "embedding": np.array(row[2])  # Chuyển đổi embedding JSON sang numpy array
+                }
+                for row in data
+            ]
+            return embeddings
+        finally:
+            cursor.close()
+            conn.close()
 
-        """Queries the database "faces" for similar embeddings."""
-        cur.execute(
-            f"""
-            SELECT * FROM (
-                SELECT name, SQRT(SUM(distance)) AS distance
-                    FROM (
-                        SELECT name, POW(UNNEST(embedding) - UNNEST(ARRAY{target_emb}), 2) AS distance
-                        FROM embeddings
-                    ) sq1
-                GROUP BY name
-            ) sq2
-            WHERE distance < {threshold}
-            ORDER BY distance;
+    def calculate_similarity(self, query_embedding, db_embeddings):
         """
-        )
-        return cur.fetchall()
-    
-    def insert_data(self, cur,img_data):
+        Tính toán độ tương đồng giữa query_embedding và tất cả embeddings trong database.
+        """
+        results = []
+        for item in db_embeddings:
+            similarity = 1 - cosine(query_embedding, item["embedding"])  # Sử dụng cosine similarity
+            results.append({
+                "face_id": item["face_id"],
+                "user_id": item["user_id"],
+                "similarity": similarity
+            })
+        # Sắp xếp theo độ tương đồng giảm dần
+        results = sorted(results, key=lambda x: x["similarity"], reverse=True)
+        return results
+
+    def extract_embedding(self, image_path):
+        """
+        Tạo embedding từ ảnh đầu vào bằng cách sử dụng DeepFace.
+        """
         try:
-            img = cv2.imread(img_data)
-            emb = self.get_face_embedding(img)
-            cur.execute(
-                f"INSERT INTO embeddings (name, embedding) VALUES ('{img}', ARRAY{emb});"
+            # Sử dụng DeepFace để tạo embedding
+            embeddings = DeepFace.represent(
+                img_path=image_path,
+                model_name=self.model,  # Model SFace
+                detector_backend=self.detector,  # Bộ phát hiện khuôn mặt
+                enforce_detection=True  # Bắt buộc phát hiện khuôn mặt
             )
+            
+            # Kiểm tra nếu không có embedding được tạo
+            if not embeddings:
+                return None
+
+            # Trả về embedding đầu tiên (thường ảnh chỉ có một khuôn mặt)
+            return embeddings[0]["embedding"]
+
         except Exception as e:
-            # logging.error(f"Failed to insert data: {e}")
+            print(f"Error generating embedding: {e}")
             return None
+
+    def search_face(self, image_path):
+        try:
+            query_embedding = self.extract_embedding(image_path)
+            if query_embedding is None:
+                return {"matched": False, "message": "No face detected in the image"}
+
+            db_embeddings = self.get_embeddings_from_db()
+            results = self.calculate_similarity(query_embedding, db_embeddings)
+            # print(results)
+            if results and len(results) > 0:
+                best_match = results[0]
+                conn = get_connection()
+                cursor = conn.cursor()
+                try:
+                    cursor.execute("SELECT image_path FROM Faces WHERE face_id = %s;", (best_match["face_id"],))
+                    image_path_db = cursor.fetchone()[0]
+                    # print("-----------------")
+                    # print(f"Best match found: {best_match['user_id']} with similarity {best_match['similarity']}")
+                    # print(f"Image path: {image_path_db}")
+                    if not os.path.exists(image_path_db):
+                        return {"matched": False, "message": "Image file does not exist in database"}
+
+                    with open(image_path_db, "rb") as image_file:
+                        encoded_image = base64.b64encode(image_file.read()).decode("utf-8")
+
+                    return {
+                        "matched": True,
+                        "similarity": best_match["similarity"],
+                        "user_id": best_match["user_id"],
+                        "image_base64": encoded_image
+                    }
+                finally:
+                    cursor.close()
+                    conn.close()
+            else:
+                return {"matched": False, "message": "No match found"}
+
+        except Exception as e:
+            return {"matched": False, "message": str(e)}
+

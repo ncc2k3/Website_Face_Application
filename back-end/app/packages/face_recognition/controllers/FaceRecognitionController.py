@@ -105,27 +105,24 @@ def liveness_detection():
 @face_recognition_blueprint.route('/search', methods=['POST'])
 def search_face():
     """
-    Endpoint để tiìm kiếm khuôn mặt trong ảnh.
+    Endpoint để tìm kiếm khuôn mặt trong cơ sở dữ liệu từ ảnh được gửi.
     """
+    # Lấy ảnh từ request
     image_file = request.files.get('image')
 
     if not image_file:
         return jsonify({"message": "No image provided"}), 400
 
-    # Tạo tên tệp bằng UUID
-    image_filename = f"{uuid.uuid4()}.jpg"
-    image_path = f"./app/images/{image_filename}"
-
-    # Lưu ảnh tạm
-    image_file.save(image_path)
+    # Lưu ảnh tạm để xử lý
+    temp_image_path = f"./app/images/temp_{uuid.uuid4().hex}.jpg"
+    image_file.save(temp_image_path)
 
     try:
-        # Gọi hàm search face
-        result, status_code = face_recognition_service.face_search(image_path)
-        return jsonify(result), status_code
+        # Tìm kiếm khuôn mặt trong database
+        result = face_recognition_service.search_face(temp_image_path)
+        return jsonify(result), 200
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": str(e)}), 400
     finally:
         # Xóa ảnh tạm sau khi xử lý
-        if os.path.exists(image_path):
-            os.remove(image_path)
+        os.remove(temp_image_path)
