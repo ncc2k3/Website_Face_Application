@@ -5,11 +5,33 @@ from scipy.spatial.distance import cosine
 import numpy as np
 import base64
 import os
+import faiss
 
 class FaceRecognitionService:
     def __init__(self):
         self.detector = 'opencv'  # Sử dụng YuNet làm detector trong DeepFace
         self.model = 'SFace'  # Sử dụng SFace model trong DeepFace
+        self.faiss_index = None
+        self.face_id_map = {} # Lưu ánh xạ giữa FAISS index và face_id
+        
+    def build_faiss_index(self):
+        """
+        Tạo FAISS index từ cơ sở dữ liệu embedding.
+        """
+        db_embeddings = self.get_embeddings_from_db()
+        embeddings = np.array([item["embedding"] for item in db_embeddings]).astype('float32')
+
+        # Normalize tất cả vector embedding
+        faiss.normalize_L2(embeddings)
+
+        # Tạo FAISS index với Inner Product cho cosine similarity
+        self.faiss_index = faiss.IndexFlatIP(embeddings.shape[1])  # Inner Product (IP)
+        self.faiss_index.add(embeddings)
+
+        # Lưu ánh xạ giữa FAISS index và face_id
+        self.face_id_map = {i: item["face_id"] for i, item in enumerate(db_embeddings)}
+    
+    """ ==================== detect faces ==================== """    
     def detect_faces(self, image_path):
         """
         Phát hiện khuôn mặt trong ảnh và trả về danh sách bounding box.
@@ -46,6 +68,7 @@ class FaceRecognitionService:
             
         return {"faces": bounding_boxes, 'confidences': confidences}
 
+    """ ==================== face compares ==================== """    
     def face_compares(self, image1_path, image2_path):
 
         """
@@ -59,7 +82,7 @@ class FaceRecognitionService:
                 model_name='SFace',
                 detector_backend=self.detector,
                 # metric: cosine, euclidean, euclidean_l2
-                # distance_metric='euclidean_l2',
+                distance_metric='cosine',
                 enforce_detection=True # Yêu cầu phát hiện khuôn mặt trước khi so sánh
             )
 
@@ -73,7 +96,7 @@ class FaceRecognitionService:
             # Trả về lỗi nếu có vấn đề trong quá trình so sánh
             return {"error": str(e)}, 400
         
-    
+    """ ==================== liveness detection ==================== """
     def liveness_detection(self, image_path):
         """
         Kiểm tra liveness và chống giả mạo (anti-spoofing) từ ảnh đầu vào.
@@ -116,6 +139,7 @@ class FaceRecognitionService:
         except Exception as e:
             return {"error": str(e)}, 400
 
+    """ ==================== face seacrh ==================== """
     def get_embeddings_from_db(self):
         """
         Truy xuất embeddings từ cơ sở dữ liệu PostgreSQL.
@@ -125,13 +149,13 @@ class FaceRecognitionService:
         try:
             cursor.execute("SELECT face_id, user_id, embedding FROM Faces;")
             data = cursor.fetchall()
-            
+
             # Chuyển đổi embedding JSON sang numpy array
             embeddings = [
                 {
                     "face_id": row[0],
                     "user_id": row[1],
-                    "embedding": np.array(row[2])  # Chuyển đổi embedding JSON sang numpy array
+                    "embedding": np.array(row[2])  # Embedding dạng numpy array
                 }
                 for row in data
             ]
@@ -140,83 +164,71 @@ class FaceRecognitionService:
             cursor.close()
             conn.close()
 
-    def calculate_similarity(self, query_embedding, db_embeddings):
-        """
-        Tính toán độ tương đồng giữa query_embedding và tất cả embeddings trong database.
-        """
-        results = []
-        for item in db_embeddings:
-            similarity = 1 - cosine(query_embedding, item["embedding"])  # Sử dụng cosine similarity
-            results.append({
-                "face_id": item["face_id"],
-                "user_id": item["user_id"],
-                "similarity": similarity
-            })
-        # Sắp xếp theo độ tương đồng giảm dần
-        results = sorted(results, key=lambda x: x["similarity"], reverse=True)
-        return results
-
     def extract_embedding(self, image_path):
         """
         Tạo embedding từ ảnh đầu vào bằng cách sử dụng DeepFace.
         """
         try:
-            # Sử dụng DeepFace để tạo embedding
             embeddings = DeepFace.represent(
                 img_path=image_path,
-                model_name=self.model,  # Model SFace
-                detector_backend=self.detector,  # Bộ phát hiện khuôn mặt
-                enforce_detection=True  # Bắt buộc phát hiện khuôn mặt
+                model_name=self.model,
+                detector_backend=self.detector,
+                enforce_detection=True
             )
-            
-            # Kiểm tra nếu không có embedding được tạo
             if not embeddings:
                 return None
-
-            # Trả về embedding đầu tiên (thường ảnh chỉ có một khuôn mặt)
             return embeddings[0]["embedding"]
-
         except Exception as e:
             print(f"Error generating embedding: {e}")
             return None
 
     def search_face(self, image_path):
+        """
+        Tìm kiếm khuôn mặt trong cơ sở dữ liệu bằng FAISS.
+        """
         try:
+            # Tạo embedding cho ảnh truy vấn
             query_embedding = self.extract_embedding(image_path)
             if query_embedding is None:
                 return {"matched": False, "message": "No face detected in the image"}
 
-            db_embeddings = self.get_embeddings_from_db()
-            results = self.calculate_similarity(query_embedding, db_embeddings)
-            # print(results)
-            if results and len(results) > 0:
-                best_match = results[0]
-                conn = get_connection()
-                cursor = conn.cursor()
-                try:
-                    cursor.execute("SELECT image_path FROM Faces WHERE face_id = %s;", (best_match["face_id"],))
-                    image_path_db = cursor.fetchone()[0]
-                    # print("-----------------")
-                    # print(f"Best match found: {best_match['user_id']} with similarity {best_match['similarity']}")
-                    # print(f"Image path: {image_path_db}")
-                    if not os.path.exists(image_path_db):
-                        return {"matched": False, "message": "Image file does not exist in database"}
+            if self.faiss_index is None:
+                self.build_faiss_index()
 
-                    with open(image_path_db, "rb") as image_file:
-                        encoded_image = base64.b64encode(image_file.read()).decode("utf-8")
+            # Normalize query embedding
+            query_embedding = np.expand_dims(query_embedding, axis=0).astype('float32')
+            faiss.normalize_L2(query_embedding)
 
-                    return {
-                        "matched": True,
-                        "similarity": best_match["similarity"],
-                        "user_id": best_match["user_id"],
-                        "image_base64": encoded_image
-                    }
-                finally:
-                    cursor.close()
-                    conn.close()
-            else:
-                return {"matched": False, "message": "No match found"}
+            # Tìm kiếm nearest neighbor
+            distances, indices = self.faiss_index.search(query_embedding, k=1)
 
+            # Lấy kết quả tốt nhất
+            best_index = indices[0][0]
+            similarity = float(distances[0][0])  # Chuyển numpy.float32 sang float
+            best_face_id = self.face_id_map[best_index]
+
+            # Truy xuất thông tin khuôn mặt từ cơ sở dữ liệu
+            conn = get_connection()
+            cursor = conn.cursor()
+            try:
+                cursor.execute("SELECT user_id, image_path FROM Faces WHERE face_id = %s;", (best_face_id,))
+                row = cursor.fetchone()
+                user_id, image_path_db = row
+
+                if not os.path.exists(image_path_db):
+                    return {"matched": False, "message": "Image file does not exist in database"}
+
+                with open(image_path_db, "rb") as image_file:
+                    encoded_image = base64.b64encode(image_file.read()).decode("utf-8")
+
+                return {
+                    "matched": True,
+                    "similarity": similarity,  # Đã chuyển sang kiểu float
+                    "user_id": user_id,
+                    "image_base64": encoded_image
+                }
+            finally:
+                cursor.close()
+                conn.close()
         except Exception as e:
             return {"matched": False, "message": str(e)}
-

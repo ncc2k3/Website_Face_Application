@@ -211,7 +211,7 @@ const FaceSearch = () => {
                                     variant="body1"
                                     sx={{ textAlign: 'center', fontWeight: 'bold', fontSize: '22px', color: '#333' }}
                                 >
-                                    Confidence: {confidenceScore}%
+                                    Score: {confidenceScore}%
                                 </Typography>
                             </>
                         ) : (

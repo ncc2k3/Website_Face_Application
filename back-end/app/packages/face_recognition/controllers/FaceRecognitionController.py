@@ -19,7 +19,7 @@ def detect_face():
         return jsonify({"message": "No image provided"}), 400
 
     # Lưu ảnh tạm để xử lý
-    image_path = f"./app/images/{image_file.filename}"
+    image_path = f"./app/images_tempt/{image_file.filename}"
     image_file.save(image_path)
     
     try:
@@ -50,8 +50,8 @@ def compare_faces():
     image2_filename = f"{uuid.uuid4()}.jpg"
 
     # Đường dẫn để lưu ảnh tạm
-    image1_path = f"./app/images/{image1_filename}"
-    image2_path = f"./app/images/{image2_filename}"
+    image1_path = f"./app/images_tempt/{image1_filename}"
+    image2_path = f"./app/images_tempt/{image2_filename}"
 
     # Lưu ảnh tạm
     image1.save(image1_path)
@@ -84,7 +84,7 @@ def liveness_detection():
 
     # Tạo tên tệp bằng UUID
     image_filename = f"{uuid.uuid4()}.jpg"
-    image_path = f"./app/images/{image_filename}"
+    image_path = f"./app/images_tempt/{image_filename}"
 
     # Lưu ảnh tạm
     image_file.save(image_path)
@@ -114,7 +114,7 @@ def search_face():
         return jsonify({"message": "No image provided"}), 400
 
     # Lưu ảnh tạm để xử lý
-    temp_image_path = f"./app/images/temp_{uuid.uuid4().hex}.jpg"
+    temp_image_path = f"./app/images_tempt/{uuid.uuid4().hex}.jpg"
     image_file.save(temp_image_path)
 
     try:

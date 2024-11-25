@@ -33,8 +33,9 @@ const LivenessDetection = () => {
             });
 
             if (response.data.results && response.data.results.length > 0) {
-                const { liveness, spoofing_score } = response.data.results[0];
-                setLivenessResult(liveness === true && spoofing_score > 0.9 ? 'Liveness Passed' : 'Spoofing Detected');
+                const { liveness } = response.data.results[0];
+                console.log(response.data.results);
+                setLivenessResult(liveness === true ? 'Liveness Passed' : 'Spoofing Detected');
                 setNoFaceDetected(false);
                 setErrorMessage('');
             } else {

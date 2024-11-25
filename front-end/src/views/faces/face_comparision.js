@@ -84,9 +84,9 @@ const FaceComparison = () => {
 
             const { verified, distance, threshold } = response.data;
             console.log(verified, distance, threshold);
-            const score = ((1 - distance / threshold) * 100).toFixed(2); // Convert to percentage
+            const score = ((1 - distance) * 100).toFixed(2); // Convert to percentage
             console.log(score);
-            if (score >= 66) {
+            if (score >= 60) {
                 setComparisonResult({
                     matched: verified,
                     score: `${score}%`,
