@@ -20,8 +20,8 @@ const sampleImages = [
 const FaceSearch = () => {
     const [selectedImage, setSelectedImage] = useState(null); // Ảnh được chọn
     const [resultImage, setResultImage] = useState(null); // Ảnh kết quả
-    const [matchResult, setMatchResult] = useState(null); // Trạng thái matched
-    const [confidenceScore, setConfidenceScore] = useState(null); // Điểm độ chính xác
+    // const [matchResult, setMatchResult] = useState(null); // Trạng thái matched
+    // const [confidenceScore, setConfidenceScore] = useState(null); // Điểm độ chính xác
     const [errorMessage, setErrorMessage] = useState(''); // Thông báo lỗi
     const [processing, setProcessing] = useState(false); // Trạng thái đang xử lý
 
@@ -30,18 +30,24 @@ const FaceSearch = () => {
         setProcessing(true);
         setErrorMessage('');
         try {
-            const response = await axios.post('http://localhost:8800/face_recognition/search', formData, {
+            const response = await axios.post('http://localhost:8800/face_recognition/search_folder', formData, {
                 headers: { 'Content-Type': 'multipart/form-data' },
             });
 
             if (response.data.matched) {
-                setResultImage(`data:image/jpeg;base64,${response.data.image_base64}`); // Hiển thị ảnh từ base64
-                setMatchResult('Matched');
-                setConfidenceScore((response.data.similarity * 100).toFixed(2)); // Chuyển similarity thành %
+                setResultImage(
+                    response.data.encoded_images.map((img, index) => ({
+                        image: `data:image/jpeg;base64,${img}`,
+                        similarity: response.data.similarities[index],
+                    }))
+                );
+
+                // setMatchResult('Matched');
+                // setConfidenceScore((response.data.similarity * 100).toFixed(2)); // Chuyển similarity thành %
             } else {
                 setResultImage(null);
-                setMatchResult('No Match Found');
-                setConfidenceScore(null);
+                // setMatchResult('No Match Found');
+                // setConfidenceScore(null);
             }
         } catch (error) {
             setErrorMessage('Error processing face search. Please try again.');
@@ -85,8 +91,8 @@ const FaceSearch = () => {
     const resetFaceSearch = () => {
         setSelectedImage(null);
         setResultImage(null);
-        setMatchResult(null);
-        setConfidenceScore(null);
+        // setMatchResult(null);
+        // setConfidenceScore(null);
         setErrorMessage('');
         setProcessing(false);
     };
@@ -111,7 +117,9 @@ const FaceSearch = () => {
                                         sx={{
                                             width: '100%',
                                             height: '150px',
-                                            objectFit: 'cover', // Đảm bảo ảnh luôn vừa khung
+                                            objectFit: 'contain', // Giữ ảnh trong khung mà không cắt
+                                            overflow: 'hidden', // Ẩn bất kỳ phần nào vượt ra ngoài khung
+                                            backgroundColor: '#f8f8f8', // Thêm màu nền để khung đẹp hơn nếu ảnh không lấp đầy
                                             border: selectedImage === image.src ? '3px solid green' : '2px solid red',
                                             borderRadius: '10px',
                                             cursor: 'pointer',
@@ -130,13 +138,14 @@ const FaceSearch = () => {
                         <Box
                             sx={{
                                 display: 'flex',
-                                justifyContent: 'center',
+                                flexDirection: 'column',
                                 alignItems: 'center',
                                 gap: '20px',
-                                marginBottom: '16px',
+                                marginBottom: '20px',
+                                height: 'auto',
                             }}
                         >
-                            {/* Selected Image */}
+                            {/* Selected Image Section */}
                             <Box
                                 component="label"
                                 sx={{
@@ -149,10 +158,10 @@ const FaceSearch = () => {
                                     display: 'flex',
                                     justifyContent: 'center',
                                     alignItems: 'center',
-                                    objectFit: 'cover',
+                                    backgroundColor: '#f8f8f8',
                                 }}
                             >
-                                {selectedImage && (
+                                {selectedImage ? (
                                     <Box
                                         component="img"
                                         src={selectedImage}
@@ -164,78 +173,102 @@ const FaceSearch = () => {
                                             borderRadius: '10px',
                                         }}
                                     />
-                                )}
-                                {/* Conditionally show the upload button */}
-                                {!selectedImage && (
+                                ) : (
                                     <IconButton
                                         color="primary"
                                         component="label"
-                                        sx={{ marginTop: '16px', backgroundColor: '#f1f1f1', borderRadius: '50%' }}
+                                        sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}
                                     >
                                         <CloudUpload sx={{ fontSize: 60 }} />
+                                        <Typography variant="body2" sx={{ fontSize: '16px', marginTop: '8px' }}>
+                                            Upload Image
+                                        </Typography>
                                         <input hidden accept="image/*" type="file" onChange={handleImageUpload} />
                                     </IconButton>
                                 )}
                             </Box>
 
-                            {/* Result Image */}
-                            {resultImage && (
-                                <Box
-                                    component="img"
-                                    src={resultImage}
-                                    alt="Result"
-                                    sx={{
-                                        width: '300px',
-                                        height: '300px',
-                                        objectFit: 'cover',
-                                        borderRadius: '10px',
-                                        border: '3px solid green',
-                                    }}
-                                />
-                            )}
-                        </Box>
-                        {/* Matched Result */}
-                        {processing ? (
-                            <Typography variant="body1" sx={{ color: '#999', fontSize: '20px', fontStyle: 'italic', textAlign: 'center' }}>
-                                Processing...
-                            </Typography>
-                        ) : matchResult ? (
-                            <>
-                                <Typography
-                                    variant="h6"
-                                    sx={{ textAlign: 'center', fontWeight: 'bold', fontSize: '22px', color: matchResult === 'Matched' ? 'green' : 'red' }}
-                                >
-                                    {matchResult}
+                            {/* Result Images Section */}
+                            {processing ? (
+                                <Typography variant="body1" sx={{ color: '#999', fontSize: '20px', fontStyle: 'italic', textAlign: 'center' }}>
+                                    Processing...
                                 </Typography>
+                            ) : resultImage ? (
+                                <Box
+                                    sx={{
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        alignItems: 'center',
+                                        gap: '20px',
+                                    }}
+                                >
+                                    <Typography variant="h6" sx={{ color: '#333', fontWeight: 'bold' }}>
+                                        Search Results
+                                    </Typography>
+                                    <Grid container spacing={2} sx={{ maxHeight: '400px', overflowY: 'auto' }}>
+                                        {resultImage.map((result, index) => (
+                                            <Grid item xs={6} sm={4} key={index}>
+                                                <Box>
+                                                    <Box
+                                                        component="img"
+                                                        src={result.image}
+                                                        alt={`Result ${index + 1}`}
+                                                        sx={{
+                                                            width: '100%',
+                                                            height: '150px',
+                                                            objectFit: 'contain', // Giữ ảnh trong khung mà không cắt
+                                                            overflow: 'hidden', // Ẩn bất kỳ phần nào vượt ra ngoài khung
+                                                            backgroundColor: '#f8f8f8', // Thêm màu nền để khung đẹp hơn nếu ảnh không lấp đầy
+                                                            borderRadius: '10px',
+                                                            border: '3px solid green',
+                                                            // transition: 'transform 0.3s',
+                                                            // '&:hover': {
+                                                            //     transform: 'scale(1.05)',
+                                                            // },
+                                                        }}
+                                                    />
+                                                    {/* <Typography variant="body2" sx={{ textAlign: 'center', marginTop: 1 }}>
+                                                        Similarity: {(result.similarity * 100).toFixed(2)}%
+                                                    </Typography> */}
+                                                </Box>
+                                            </Grid>
+                                        ))}
+                                    </Grid>
+                                </Box>
+                            ) : (
                                 <Typography
                                     variant="body1"
-                                    sx={{ textAlign: 'center', fontWeight: 'bold', fontSize: '22px', color: '#333' }}
+                                    sx={{ textAlign: 'center', color: 'red', fontWeight: 'bold', marginTop: 2 }}
                                 >
-                                    Score: {confidenceScore}%
+                                    {errorMessage || 'No results to display.'}
                                 </Typography>
-                            </>
-                        ) : (
-                            <Typography
-                                variant="body1"
-                                sx={{ textAlign: 'center', color: 'red', fontWeight: 'bold' }}
-                            >
-                                {errorMessage}
-                            </Typography>
-                        )}
-                        {/* Reset Button */}
-                        {selectedImage && (
-                            <Box sx={{ textAlign: 'center', marginTop: 2 }}>
-                                <Button
-                                    variant="outlined"
-                                    color="primary"
-                                    onClick={resetFaceSearch}
-                                    sx={{ borderRadius: '8px', fontWeight: 'bold', fontSize: '18px' }}
-                                >
-                                    Reset
-                                </Button>
-                            </Box>
-                        )}
+                            )}
+
+                            {/* Reset Button */}
+                            {selectedImage && (
+                                <Box sx={{ textAlign: 'center', marginTop: 2 }}>
+                                    <Button
+                                        variant="contained"
+                                        color="secondary"
+                                        onClick={resetFaceSearch}
+                                        sx={{
+                                            borderRadius: '8px',
+                                            fontWeight: 'bold',
+                                            fontSize: '18px',
+                                            padding: '8px 16px',
+                                            backgroundColor: '#f44336',
+                                            '&:hover': {
+                                                backgroundColor: '#d32f2f',
+                                            },
+                                        }}
+                                    >
+                                        Reset
+                                    </Button>
+                                </Box>
+                            )}
+                        </Box>
                     </SubCard>
+
                 </Grid>
             </Grid>
         </MainCard>

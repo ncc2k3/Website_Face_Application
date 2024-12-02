@@ -143,6 +143,7 @@ class FaceRecognitionService:
     def get_embeddings_from_db(self):
         """
         Truy xuất embeddings từ cơ sở dữ liệu PostgreSQL.
+        faiss - thêm - xóa (cút)
         """
         conn = get_connection()
         cursor = conn.cursor()
@@ -230,5 +231,103 @@ class FaceRecognitionService:
             finally:
                 cursor.close()
                 conn.close()
+        except Exception as e:
+            return {"matched": False, "message": str(e)}
+        
+    #####################################
+    def build_faiss_index_from_folder(self, folder_path):
+        """
+        Tạo FAISS index từ các ảnh trong một folder.
+        """
+        try:
+            embeddings = []
+            self.face_id_map = {}
+
+            # Duyệt qua tất cả file ảnh trong folder
+            for i, filename in enumerate(os.listdir(folder_path)):
+                file_path = os.path.join(folder_path, filename)
+                if os.path.isfile(file_path):
+                    embedding = self.extract_embedding(file_path)
+                    if embedding is not None:
+                        embeddings.append(embedding)
+                        self.face_id_map[i] = file_path  # Lưu ánh xạ index -> file path
+
+            # Nếu không có embeddings nào, trả về lỗi
+            if not embeddings:
+                raise ValueError("No valid faces found in the folder.")
+
+            embeddings = np.array(embeddings).astype('float32')
+            faiss.normalize_L2(embeddings)
+
+            # Tạo FAISS index IVF
+            dim = embeddings.shape[1]
+            nlist = 10  # Số cụm (clusters)
+            quantizer = faiss.IndexFlatL2(dim)  # Sử dụng quantizer L2 (hoặc có thể dùng IndexFlatIP)
+            self.faiss_index = faiss.IndexIVFFlat(quantizer, dim, nlist, faiss.METRIC_L2)
+
+            # Huấn luyện index IVF
+            if not self.faiss_index.is_trained:
+                print(f"Training FAISS index with {embeddings.shape[0]} samples...")
+                self.faiss_index.train(embeddings)
+
+            # Thêm embeddings vào index
+            print("Adding embeddings to FAISS index...")
+            self.faiss_index.add(embeddings)
+
+            return {"message": "FAISS index built successfully from folder."}
+        except Exception as e:
+            return {"error": str(e)}
+
+    def search_face_in_folder(self, image_path, folder_path):
+        """
+        Tìm kiếm khuôn mặt trong một folder và trả về danh sách 5 ảnh phù hợp cùng danh sách độ tương tự.
+        """
+        try:
+            # Kiểm tra và cập nhật FAISS index nếu cần
+            if self.faiss_index is None or not self.face_id_map:
+                self.build_faiss_index_from_folder(folder_path)
+
+            # Tạo embedding cho ảnh truy vấn
+            query_embedding = self.extract_embedding(image_path)
+            if query_embedding is None:
+                return {"matched": False, "message": "No face detected in the query image."}
+
+            query_embedding = np.expand_dims(query_embedding, axis=0).astype('float32')
+            faiss.normalize_L2(query_embedding)
+
+            # Tìm kiếm nearest neighbors (Top K)
+            k = 5  # Số lượng kết quả trả về
+            nprobe = 5  # Số lượng cụm tìm kiếm trong FAISS (thường ít hơn hoặc bằng nlist)
+            self.faiss_index.nprobe = nprobe
+            distances, indices = self.faiss_index.search(query_embedding, k=k)
+            print("\n\n\Indices:", indices)
+            # Khởi tạo danh sách kết quả
+            encoded_images = []
+            similarities = []
+
+            # Duyệt qua các kết quả trả về
+            for i, index in enumerate(indices[0]):
+                file_path = self.face_id_map.get(index, None)
+                similarity = float(distances[0][i])
+
+                # Bỏ qua nếu file không tồn tại
+                if file_path is None or not os.path.exists(file_path):
+                    continue
+
+                # Đọc và encode ảnh
+                with open(file_path, "rb") as image_file:
+                    encoded_image = base64.b64encode(image_file.read()).decode("utf-8")
+                    encoded_images.append(encoded_image)
+                    similarities.append(similarity)
+
+            if not encoded_images:
+                return {"matched": False, "message": "No matching faces found or files missing."}
+
+            return {
+                "matched": True,
+                "encoded_images": encoded_images,
+                "similarities": similarities
+            }
+
         except Exception as e:
             return {"matched": False, "message": str(e)}
