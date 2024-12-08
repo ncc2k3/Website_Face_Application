@@ -97,8 +97,7 @@ def liveness_detection():
         return jsonify({"error": str(e)}), 500
     finally:
         # Xóa ảnh tạm sau khi xử lý
-        if os.path.exists(image_path):
-            os.remove(image_path)
+        os.remove(image_path)
 
 
 # routes: /face_recognition/search

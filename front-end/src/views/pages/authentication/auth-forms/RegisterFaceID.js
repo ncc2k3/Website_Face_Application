@@ -53,7 +53,7 @@ const RegisterFaceID = () => {
                 }
             } catch (error) {
                 console.error('Error during Face ID registration:', error.response ? error.response.data : error.message);
-                alert('An error occurred during registration.');
+                alert('Faced is not detected. Please try again.');
             } finally {
                 setLoading(false);
             }

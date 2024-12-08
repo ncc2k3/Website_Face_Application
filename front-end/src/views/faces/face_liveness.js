@@ -5,6 +5,8 @@ import MainCard from 'ui-component/cards/MainCard';
 import SubCard from 'ui-component/cards/SubCard';
 import axios from 'axios';
 import CustomDialog from 'ui-component/CustomDialog';
+import { callApi } from 'utils/apiHelper';
+import { API_CONFIG } from 'apiConfig';
 
 const sampleImages = [
     { id: 1, src: require('../../assets/images/face/Angelina-Jolie_fake.png'), alt: 'Sample 1' },
@@ -28,9 +30,7 @@ const LivenessDetection = () => {
     // Hàm xử lý liveness detection
     const processLivenessDetection = async (data) => {
         try {
-            const response = await axios.post('http://localhost:8800/face_recognition/liveness_detection', data, {
-                headers: { 'Content-Type': 'multipart/form-data' },
-            });
+            const response = await callApi(API_CONFIG.ENDPOINTS.LIVENESS, data);
 
             if (response.data.results && response.data.results.length > 0) {
                 const { liveness } = response.data.results[0];

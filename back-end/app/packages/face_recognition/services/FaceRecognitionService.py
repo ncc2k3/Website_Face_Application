@@ -113,7 +113,7 @@ class FaceRecognitionService:
             faces = DeepFace.extract_faces(
                 img_path=image_path,
                 detector_backend=self.detector,  # Bộ phát hiện khuôn mặt (opencv, mtcnn, ...)
-                enforce_detection=True,          # Bắt buộc phát hiện khuôn mặt
+                # enforce_detection=True,          # Bắt buộc phát hiện khuôn mặt
                 anti_spoofing=True               # Kích hoạt kiểm tra chống giả mạo
             )
 

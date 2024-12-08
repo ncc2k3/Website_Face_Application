@@ -4,6 +4,8 @@ import { CloudUpload } from '@mui/icons-material';
 import MainCard from 'ui-component/cards/MainCard';
 import SubCard from 'ui-component/cards/SubCard';
 import axios from 'axios';
+import { callApi } from 'utils/apiHelper';
+import { API_CONFIG } from 'apiConfig';
 
 const sampleImages = [
     { id: 1, src: require('../../assets/images/face/face_search/img14.jpg'), name: 'Angelina Jolie' },
@@ -30,9 +32,7 @@ const FaceSearch = () => {
         setProcessing(true);
         setErrorMessage('');
         try {
-            const response = await axios.post('http://localhost:8800/face_recognition/search_folder', formData, {
-                headers: { 'Content-Type': 'multipart/form-data' },
-            });
+            const response = await callApi(API_CONFIG.ENDPOINTS.FACE_SEARCH, formData);
 
             if (response.data.matched) {
                 setResultImage(

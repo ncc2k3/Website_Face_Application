@@ -4,6 +4,8 @@ import { CloudUpload } from '@mui/icons-material';
 import MainCard from 'ui-component/cards/MainCard';
 import SubCard from 'ui-component/cards/SubCard';
 import axios from 'axios';
+import { callApi } from 'utils/apiHelper';
+import { API_CONFIG } from 'apiConfig';
 
 const sampleImages = [
     { id: 1, src: require('../../assets/images/face/1.jpg'), alt: 'Sample 1' },
@@ -62,9 +64,7 @@ const FaceDetection = () => {
         formData.append('image', imageBlob);
 
         try {
-            const response = await axios.post('http://localhost:8800/face_recognition/detect', formData, {
-                headers: { 'Content-Type': 'multipart/form-data' }
-            });
+            const response = await callApi(API_CONFIG.ENDPOINTS.FACE_DETECTION, formData);
 
             if (response.data.faces && response.data.confidences) {
                 const filteredBoxes = [];

@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { Grid, Typography, Box, IconButton, Button } from '@mui/material';
 import { CloudUpload } from '@mui/icons-material';
-import axios from 'axios';
 
 // project imports
 import MainCard from 'ui-component/cards/MainCard';
 import SubCard from 'ui-component/cards/SubCard';
 
 import CustomDialog from 'ui-component/CustomDialog';
+import { callApi } from 'utils/apiHelper';
+import { API_CONFIG } from 'apiConfig';
 
 const FaceComparison = () => {
     const [firstImage, setFirstImage] = useState(null); // Ảnh gốc hiển thị
@@ -70,9 +71,7 @@ const FaceComparison = () => {
         formData.append("image2", resizedSecondFile);
 
         try {
-            const response = await axios.post("http://localhost:8800/face_recognition/compare", formData, {
-                headers: { "Content-Type": "multipart/form-data" },
-            });
+            const response = await callApi(API_CONFIG.ENDPOINTS.FACE_COMPARISON, formData);
 
             // console.log(response.data[0]?.error);
             // Kiểm tra nếu response.data là một mảng và chứa lỗi
