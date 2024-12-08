@@ -64,12 +64,13 @@ const FaceDetection = () => {
         formData.append('image', imageBlob);
 
         try {
-            const response = await callApi(API_CONFIG.ENDPOINTS.FACE_DETECTION, formData);
+            const response = await callApi(API_CONFIG.ENDPOINTS.FACE_DETECTION, formData, true);
 
             if (response.data.faces && response.data.confidences) {
                 const filteredBoxes = [];
                 response.data.faces.forEach((face, index) => {
-                    if (response.data.confidences[index] >= 0.9) {
+                    console.log(response.data.confidences[index]);
+                    if (response.data.confidences[index] >= 0.85) {
                         filteredBoxes.push(face);
                     }
                 });

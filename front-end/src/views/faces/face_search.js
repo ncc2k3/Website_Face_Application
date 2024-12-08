@@ -32,7 +32,7 @@ const FaceSearch = () => {
         setProcessing(true);
         setErrorMessage('');
         try {
-            const response = await callApi(API_CONFIG.ENDPOINTS.FACE_SEARCH, formData);
+            const response = await callApi(API_CONFIG.ENDPOINTS.FACE_SEARCH, formData, true);
 
             if (response.data.matched) {
                 setResultImage(

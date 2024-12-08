@@ -41,6 +41,8 @@ import { useNavigate } from 'react-router';
 
 import Webcam from 'react-webcam';
 import { useRef } from 'react';
+import { callApi } from 'utils/apiHelper';
+import { API_CONFIG } from 'apiConfig';
 
 // ============================|| FIREBASE - LOGIN ||============================ //
 
@@ -67,25 +69,31 @@ const FirebaseLogin = ({ ...others }) => {
   const navigate = useNavigate();
 
   // Xử lý sự kiện: login bằng email và password khi người dùng nhấn nút "Sign in"
-  const handleSignIn = (values) => {
-    axios
-      .post('http://localhost:8800/auth/login', { email: values.email, password: values.password })
-      .then((response) => {
-        console.log(response.data);
-        alert('User Logging in successfully');
-        const firstName = response.data.first_name;
-        const lastName = response.data.last_name;
+  const handleSignIn = async (values) => {
+    try {
+      const response = await callApi(API_CONFIG.ENDPOINTS.LOGIN, {
+        email: values.email,
+        password: values.password
+      });
 
-        // console.log('First Name:', firstName);
-        localStorage.setItem('firstName', firstName);
-        localStorage.setItem('lastName', lastName);
-        navigate('/dashboard/default');
-      })
-      .catch((error) => {
-        console.log(error);
-        alert('Email or password was wrong !!!', error);
-      })
-  }
+      console.log(response);
+      alert('User logged in successfully');
+
+      const firstName = response.data.first_name;
+      const lastName = response.data.last_name;
+
+      // Lưu thông tin người dùng vào localStorage
+      localStorage.setItem('firstName', firstName);
+      localStorage.setItem('lastName', lastName);
+
+      // Điều hướng đến trang dashboard
+      navigate('/dashboard/default');
+    } catch (error) {
+      console.error('Login Error:', error);
+      alert('Email or password is incorrect.');
+    }
+  };
+
 
   const webcamRef = useRef(null);
   const [loading, setLoading] = useState(false);

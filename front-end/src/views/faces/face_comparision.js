@@ -71,7 +71,7 @@ const FaceComparison = () => {
         formData.append("image2", resizedSecondFile);
 
         try {
-            const response = await callApi(API_CONFIG.ENDPOINTS.FACE_COMPARISON, formData);
+            const response = await callApi(API_CONFIG.ENDPOINTS.FACE_COMPARISON, formData, true);
 
             // console.log(response.data[0]?.error);
             // Kiểm tra nếu response.data là một mảng và chứa lỗi

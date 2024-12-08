@@ -3,6 +3,8 @@ import { useState, useRef } from 'react';
 import { Button, Typography, Grid } from '@mui/material';
 import Webcam from 'react-webcam';
 import axios from 'axios';
+import { callApi } from 'utils/apiHelper';
+import { API_CONFIG } from 'apiConfig';
 
 const RegisterFaceID = () => {
     const navigate = useNavigate();
@@ -35,11 +37,7 @@ const RegisterFaceID = () => {
             formData.append('email', email);  // Gửi email
 
             try {
-                const response = await axios.post('http://localhost:8800/auth/register_face', formData, {
-                    headers: {
-                        'Content-Type': 'multipart/form-data',
-                    },
-                });
+                const response = await callApi(API_CONFIG.ENDPOINTS.REGISTER_FACE, formData, true);
 
                 if (response.status === 200) {
                     alert('Face ID registered successfully!');

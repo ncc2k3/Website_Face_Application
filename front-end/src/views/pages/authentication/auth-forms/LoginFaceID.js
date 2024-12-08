@@ -2,9 +2,11 @@
 import { useRef, useState } from 'react';
 import { Button } from '@mui/material';
 import Webcam from 'react-webcam';
-import axios from 'axios';
+// import axios from 'axios';
 import { useNavigate } from 'react-router';
 import { Grid, Typography } from '@mui/material';
+import { callApi } from 'utils/apiHelper';
+import { API_CONFIG } from 'apiConfig';
 
 const LoginWithFaceID = () => {
     const webcamRef = useRef(null);
@@ -30,11 +32,7 @@ const LoginWithFaceID = () => {
             formData.append('image', imageBlob, 'face_image.jpg');
 
             try {
-                const response = await axios.post('http://localhost:8800/auth/login_face', formData, {
-                    headers: {
-                        'Content-Type': 'multipart/form-data',
-                    },
-                });
+                const response = await callApi(API_CONFIG.ENDPOINTS.LOGIN_FACE, formData, true);
 
                 if (response.status === 200) {
                     if (response.data.message === 'Login successful') {

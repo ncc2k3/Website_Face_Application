@@ -12,7 +12,8 @@ const ForgotPassword = () => {
 
     // Hàm mở hộp thoại xác nhận
     const handleForgotPasswordClick = () => {
-        setOpenDialog(true);
+        alert('Reset Password? Not implemented yet!');
+        setOpenDialog(false);
     };
 
     // Hàm khi nhấn nút "Có"

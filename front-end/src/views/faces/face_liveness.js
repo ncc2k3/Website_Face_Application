@@ -30,7 +30,7 @@ const LivenessDetection = () => {
     // Hàm xử lý liveness detection
     const processLivenessDetection = async (data) => {
         try {
-            const response = await callApi(API_CONFIG.ENDPOINTS.LIVENESS, data);
+            const response = await callApi(API_CONFIG.ENDPOINTS.LIVENESS, data, true);
 
             if (response.data.results && response.data.results.length > 0) {
                 const { liveness } = response.data.results[0];
