@@ -19,7 +19,7 @@ def detect_face():
         return jsonify({"message": "No image provided"}), 400
 
     # Lưu ảnh tạm để xử lý
-    image_path = f"./app/images/{image_file.filename}"
+    image_path = f"./app/images_tempt/{image_file.filename}"
     image_file.save(image_path)
     
     try:
@@ -50,8 +50,8 @@ def compare_faces():
     image2_filename = f"{uuid.uuid4()}.jpg"
 
     # Đường dẫn để lưu ảnh tạm
-    image1_path = f"./app/images/{image1_filename}"
-    image2_path = f"./app/images/{image2_filename}"
+    image1_path = f"./app/images_tempt/{image1_filename}"
+    image2_path = f"./app/images_tempt/{image2_filename}"
 
     # Lưu ảnh tạm
     image1.save(image1_path)
@@ -84,7 +84,7 @@ def liveness_detection():
 
     # Tạo tên tệp bằng UUID
     image_filename = f"{uuid.uuid4()}.jpg"
-    image_path = f"./app/images/{image_filename}"
+    image_path = f"./app/images_tempt/{image_filename}"
 
     # Lưu ảnh tạm
     image_file.save(image_path)
@@ -99,3 +99,57 @@ def liveness_detection():
         # Xóa ảnh tạm sau khi xử lý
         if os.path.exists(image_path):
             os.remove(image_path)
+
+
+# routes: /face_recognition/search
+@face_recognition_blueprint.route('/search', methods=['POST'])
+def search_face():
+    """
+    Endpoint để tìm kiếm khuôn mặt trong cơ sở dữ liệu từ ảnh được gửi.
+    """
+    # Lấy ảnh từ request
+    image_file = request.files.get('image')
+
+    if not image_file:
+        return jsonify({"message": "No image provided"}), 400
+
+    # Lưu ảnh tạm để xử lý
+    temp_image_path = f"./app/images_tempt/{uuid.uuid4().hex}.jpg"
+    image_file.save(temp_image_path)
+
+    try:
+        # Tìm kiếm khuôn mặt trong database
+        result = face_recognition_service.search_face(temp_image_path)
+        return jsonify(result), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+    finally:
+        # Xóa ảnh tạm sau khi xử lý
+        os.remove(temp_image_path)
+
+# routes: /face_recognition/search_folder
+@face_recognition_blueprint.route('/search_folder', methods=['POST'])
+def search_face_folder():
+    """
+    Endpoint để tìm kiếm khuôn mặt trong cơ sở dữ liệu từ ảnh được gửi.
+    """
+    # Lấy ảnh từ request
+    image_file = request.files.get('image')
+
+    if not image_file:
+        return jsonify({"message": "No image provided"}), 400
+
+    # Lưu ảnh tạm để xử lý
+    temp_image_path = f"./app/images_tempt/{uuid.uuid4().hex}.jpg"
+    image_file.save(temp_image_path)
+
+    try:
+        # Tìm kiếm khuôn mặt trong database
+        folder_path = f"./app/store_database/imgs_database_faces"
+        result = face_recognition_service.search_face_in_folder(temp_image_path,folder_path)
+        return jsonify(result), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+    finally:
+        # Xóa ảnh tạm sau khi xử lý
+        os.remove(temp_image_path)

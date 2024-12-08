@@ -21,6 +21,8 @@ const SamplePage = Loadable(lazy(() => import('views/sample-page')));
 const FacesDetection = Loadable(lazy(() => import('views/faces/face_detection')));
 const FacesComparision = Loadable(lazy(() => import('views/faces/face_comparision')));
 const LivenessDetection = Loadable(lazy(() => import('views/faces/face_liveness')));
+const FacesSearch = Loadable(lazy(() => import('views/faces/face_search')));
+
 import { Navigate } from 'react-router-dom';
 
 // ==============================|| MAIN ROUTING ||============================== //
@@ -69,7 +71,7 @@ const MainRoutes = {
       children: [
         {
           path: 'face-search',
-          element: <UtilsTypography />
+          element: <FacesSearch />
         }
       ]
     },

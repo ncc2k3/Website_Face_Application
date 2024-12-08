@@ -3,21 +3,21 @@ from flask_bcrypt import check_password_hash, generate_password_hash
 class User:
     __tablename__ = "users"
     
-    def __init__(self, id=None, first_name=None, last_name=None, email=None, password=None, face_encoding=None):
-        self.id = id
+    def __init__(self, user_id=None, first_name=None, last_name=None, email=None, password=None, created_at=None):
+        self.user_id = user_id
         self.first_name = first_name
         self.last_name = last_name
         self.email = email
         self.password = password
-        self.face_encoding = face_encoding
+        self.created_at = created_at
 
     def to_insert_query(self):
         query = '''
-            INSERT INTO users (first_name, last_name, email, password, face_encoding)
-            VALUES (%s, %s, %s, %s, %s)
-            RETURNING id;
+            INSERT INTO users (first_name, last_name, email, password)
+            VALUES (%s, %s, %s, %s)
+            RETURNING user_id;
         '''
-        values = (self.first_name, self.last_name, self.email, self.password, self.face_encoding)
+        values = (self.first_name, self.last_name, self.email, self.password)
         return query, values
     
     def to_update_query(self, update_values):
