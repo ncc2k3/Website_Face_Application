@@ -2,10 +2,12 @@
 
 # Run front-end
 
-npm install
+npm install (Tải thư viện)
+
 npm start
 
 # Run back-end
+pip install -r requirements.txt (Tải thư viện)
 
 python server.py
 
