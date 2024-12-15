@@ -85,17 +85,21 @@ const FaceComparison = () => {
             console.log(verified, distance, threshold);
             const score = ((1 - distance) * 100).toFixed(2); // Convert to percentage
             console.log(score);
-            if (score >= 60) {
-                setComparisonResult({
-                    matched: verified,
-                    score: `${score}%`,
-                });
-            } else {
-                setComparisonResult({
-                    matched: false,
-                    score: `${score}%`,
-                });
-            }
+            setComparisonResult({
+                matched: verified,
+                score: `${score}%`,
+            });
+            // if (score >= 60) {
+            //     setComparisonResult({
+            //         matched: verified,
+            //         score: `${score}%`,
+            //     });
+            // } else {
+            //     setComparisonResult({
+            //         matched: false,
+            //         score: `${score}%`,
+            //     });
+            // }
             setError(null);
         } catch (err) {
             setComparisonResult(null);
@@ -221,9 +225,9 @@ const FaceComparison = () => {
                 {/* Result - Comparison Result */}
                 <Grid item xs={12} sm={4}>
                     <SubCard title="Result">
-                        <Typography variant="body2" sx={{ color: 'red', fontWeight: 'bold' }}>
+                        {/* <Typography variant="body2" sx={{ color: 'red', fontWeight: 'bold' }}>
                             Score of 60% or more is a match
-                        </Typography>
+                        </Typography> */}
                         <Box
                             sx={{
                                 width: '100%',
@@ -243,7 +247,7 @@ const FaceComparison = () => {
                             {comparisonResult ? (
                                 <Typography variant="h2" sx={{ color: comparisonResult.matched ? 'white ' : 'red' }}>
                                     {comparisonResult.matched
-                                        ? `Matched! Score: ${comparisonResult.score}`
+                                        ? `Matched!`
                                         : `Not Matched!`}
                                 </Typography>
                             ) : error ? (

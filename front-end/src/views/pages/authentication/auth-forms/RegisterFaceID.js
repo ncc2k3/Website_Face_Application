@@ -2,7 +2,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useState, useRef } from 'react';
 import { Button, Typography, Grid } from '@mui/material';
 import Webcam from 'react-webcam';
-import axios from 'axios';
+// import axios from 'axios';
 import { callApi } from 'utils/apiHelper';
 import { API_CONFIG } from 'apiConfig';
 
