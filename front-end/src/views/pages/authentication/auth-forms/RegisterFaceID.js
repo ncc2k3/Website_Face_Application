@@ -2,7 +2,9 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useState, useRef } from 'react';
 import { Button, Typography, Grid } from '@mui/material';
 import Webcam from 'react-webcam';
-import axios from 'axios';
+// import axios from 'axios';
+import { callApi } from 'utils/apiHelper';
+import { API_CONFIG } from 'apiConfig';
 
 const RegisterFaceID = () => {
     const navigate = useNavigate();
@@ -35,23 +37,21 @@ const RegisterFaceID = () => {
             formData.append('email', email);  // Gửi email
 
             try {
-                const response = await axios.post('http://localhost:8800/auth/register_face', formData, {
-                    headers: {
-                        'Content-Type': 'multipart/form-data',
-                    },
-                });
+                const response = await callApi(API_CONFIG.ENDPOINTS.REGISTER_FACE, formData, true);
 
                 if (response.status === 200) {
                     alert('Face ID registered successfully!');
                     setImageSrc(capturedImage);
                     setProcessingDone(true);
-                    navigate('/');  // Chuyển về trang chủ
+
+
+                    navigate('/pages/login/login3');  // Chuyển về đăng nhập
                 } else {
                     alert(`Failed to register Face ID: ${response.data.message}`);
                 }
             } catch (error) {
                 console.error('Error during Face ID registration:', error.response ? error.response.data : error.message);
-                alert('An error occurred during registration.');
+                alert('Faced is not detected. Please try again.');
             } finally {
                 setLoading(false);
             }

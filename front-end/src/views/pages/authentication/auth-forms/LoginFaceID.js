@@ -2,9 +2,11 @@
 import { useRef, useState } from 'react';
 import { Button } from '@mui/material';
 import Webcam from 'react-webcam';
-import axios from 'axios';
+// import axios from 'axios';
 import { useNavigate } from 'react-router';
 import { Grid, Typography } from '@mui/material';
+import { callApi } from 'utils/apiHelper';
+import { API_CONFIG } from 'apiConfig';
 
 const LoginWithFaceID = () => {
     const webcamRef = useRef(null);
@@ -30,16 +32,19 @@ const LoginWithFaceID = () => {
             formData.append('image', imageBlob, 'face_image.jpg');
 
             try {
-                const response = await axios.post('http://localhost:8800/auth/login_face', formData, {
-                    headers: {
-                        'Content-Type': 'multipart/form-data',
-                    },
-                });
+                const response = await callApi(API_CONFIG.ENDPOINTS.LOGIN_FACE, formData, true);
 
                 if (response.status === 200) {
                     if (response.data.message === 'Login successful') {
                         alert('Face ID login successful!');
-                        navigate('/');
+                        const firstName = response.data.first_name;
+                        const lastName = response.data.last_name;
+
+                        console.log('First Name:', firstName);
+                        console.log('Last Name:', lastName);
+                        localStorage.setItem('firstName', firstName);
+                        localStorage.setItem('lastName', lastName);
+                        navigate('/dashboard/default');
                     } else {
                         alert(`${response.data.message}`);
                     }
@@ -59,7 +64,7 @@ const LoginWithFaceID = () => {
     return (
         <Grid container direction="column" justifyContent="center" alignItems="center" spacing={2}>
             <Grid item xs={12}>
-                <Typography  variant="h1" sx={{ mt: 2, mb: 2, textAlign: 'center' }} align="center">Login with Face ID</Typography>
+                <Typography variant="h1" sx={{ mt: 2, mb: 2, textAlign: 'center' }} align="center">Login with Face ID</Typography>
             </Grid>
             <Grid item xs={12}>
                 <Webcam
@@ -77,7 +82,7 @@ const LoginWithFaceID = () => {
                     disabled={loading}
                     fullWidth
                     sx={{ mt: 2 }}
-                    size = "large"
+                    size="large"
                 >
                     {loading ? 'Processing...' : 'Login with Face ID'}
                 </Button>

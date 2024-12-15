@@ -40,6 +40,8 @@ import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import axios from 'axios';
 import Webcam from 'react-webcam';
 import { useNavigate } from 'react-router-dom';
+import { callApi } from 'utils/apiHelper';
+import { API_CONFIG } from 'apiConfig';
 
 const FirebaseRegister = ({ ...others }) => {
   const theme = useTheme();
@@ -54,6 +56,8 @@ const FirebaseRegister = ({ ...others }) => {
   const [processingDone, setProcessingDone] = useState(false); // Trạng thái khi đã xử lý xong
   const [imageSrc, setImageSrc] = useState(null);  // Lưu ảnh đã chụp
   const webcamRef = useRef(null);  // Webcam
+
+
 
   const googleHandler = async () => {
     console.error('Register');
@@ -76,23 +80,21 @@ const FirebaseRegister = ({ ...others }) => {
   const navigate = useNavigate();
   // Trong hàm handleSignUp:
   const handleSignUp = (values) => {
-    axios
-      .post('http://localhost:8800/auth/register', {
+    try {
+      const response = callApi(API_CONFIG.ENDPOINTS.REGISTER, {
         first_name: values.first_name,
         last_name: values.last_name,
         email: values.email,
         password: values.password
-      })
-      .then((response) => {
-        console.log(response.data);
-        alert('User registered successfully');
-        // Chuyển hướng sang trang đăng ký Face ID
-        navigate(`/pages/register/register-face-id?email=${values.email}`); // Gửi email thông qua query params
-      })
-      .catch((error) => {
-        console.log(error);
-        alert('Email already exists', error);
       });
+      console.log(response.data);
+      alert('User registered successfully');
+      // Chuyển hướng sang trang đăng ký Face ID
+      navigate(`/pages/register/register-face-id?email=${values.email}`); // Gửi email thông qua query params
+    } catch (error) {
+      console.log(error);
+      alert('Email already exists', error);
+    }
   };
 
 

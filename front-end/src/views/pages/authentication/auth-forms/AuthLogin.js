@@ -41,6 +41,8 @@ import { useNavigate } from 'react-router';
 
 import Webcam from 'react-webcam';
 import { useRef } from 'react';
+import { callApi } from 'utils/apiHelper';
+import { API_CONFIG } from 'apiConfig';
 
 // ============================|| FIREBASE - LOGIN ||============================ //
 
@@ -67,19 +69,31 @@ const FirebaseLogin = ({ ...others }) => {
   const navigate = useNavigate();
 
   // Xử lý sự kiện: login bằng email và password khi người dùng nhấn nút "Sign in"
-  const handleSignIn = (values) => {
-    axios
-      .post('http://localhost:8800/auth/login', { email: values.email, password: values.password })
-      .then((response) => {
-        console.log(response.data);
-        alert('User Logging in successfully');
-        navigate('/');
-      })
-      .catch((error) => {
-        console.log(error);
-        alert('Email or password was wrong !!!', error);
-      })
-  }
+  const handleSignIn = async (values) => {
+    try {
+      const response = await callApi(API_CONFIG.ENDPOINTS.LOGIN, {
+        email: values.email,
+        password: values.password
+      });
+
+      console.log(response);
+      alert('User logged in successfully');
+
+      const firstName = response.data.first_name;
+      const lastName = response.data.last_name;
+
+      // Lưu thông tin người dùng vào localStorage
+      localStorage.setItem('firstName', firstName);
+      localStorage.setItem('lastName', lastName);
+
+      // Điều hướng đến trang dashboard
+      navigate('/dashboard/default');
+    } catch (error) {
+      console.error('Login Error:', error);
+      alert('Email or password is incorrect.');
+    }
+  };
+
 
   const webcamRef = useRef(null);
   const [loading, setLoading] = useState(false);
@@ -92,45 +106,6 @@ const FirebaseLogin = ({ ...others }) => {
       u8arr[n] = bstr.charCodeAt(n);
     }
     return new Blob([u8arr], { type: mime });
-  };
-
-  // Hàm chụp ảnh từ webcam và gửi ảnh đến backend dưới dạng file
-  const handleLoginWithFaceID = async () => {
-    setLoading(true);  // Đặt loading là true ngay khi nhấn nút
-
-    const imageSrc = webcamRef.current.getScreenshot();  // Chụp ảnh từ webcam
-    if (imageSrc) {
-      const imageBlob = dataURLtoBlob(imageSrc);  // Chuyển base64 sang blob
-      const formData = new FormData();
-      formData.append('image', imageBlob, 'face_image.jpg');  // Tạo form-data để gửi file ảnh
-
-      try {
-        const response = await axios.post('http://localhost:8800/auth/login_face', formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        });
-
-        // Kiểm tra mã phản hồi (status code)
-        if (response.status === 200) {
-          if (response.data.message === 'Login successful') {
-            alert('Face ID login successful!');
-            navigate('/');
-          } else {
-            alert(`Face ID does not match: ${response.data.message}`);
-          }
-        }
-      }
-      catch (error) {
-        console.error('Error during Face ID login:', error.response ? error.response.data : error.message);
-        alert('An error occurred during login.');
-      } finally {
-        setLoading(false);  // Đặt loading là false sau khi hoàn thành quá trình xử lý
-      }
-    } else {
-      alert('Failed to capture image from webcam');
-      setLoading(false);
-    }
   };
 
   return (
@@ -276,11 +251,11 @@ const FirebaseLogin = ({ ...others }) => {
                 }
                 label="Remember me"
               />
-              <Typography 
-              variant="subtitle1" 
-              color="secondary" 
-              sx={{ textDecoration: 'none', cursor: 'pointer' }}
-              onClick={() => navigate('/pages/login/reset-password')}
+              <Typography
+                variant="subtitle1"
+                color="secondary"
+                sx={{ textDecoration: 'none', cursor: 'pointer' }}
+                onClick={() => navigate('/pages/login/reset-password')}
               >
                 Reset Password?
               </Typography>

@@ -20,7 +20,8 @@ const icons = {
 
 const faces = {
     id: 'faces',
-    title: 'Faces Recognition',
+    title: 'Faces',
+    caption: 'Face Recognition',
     type: 'group',
     children: [
         {
@@ -36,7 +37,7 @@ const faces = {
             title: 'Face Comparision',
             type: 'item',
             url: '/faces/face-comparision',
-            icon: icons.IconSearch,
+            icon: icons.IconScale,
             breadcrumbs: false
         },
         {
@@ -44,7 +45,7 @@ const faces = {
             title: 'Face Search',
             type: 'item',
             url: '/faces/face-search',
-            icon: icons.IconScale,
+            icon: icons.IconSearch,
             breadcrumbs: false
         },
         {
