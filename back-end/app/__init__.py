@@ -9,17 +9,17 @@ from app.controllers.hello import index_blueprint
 def create_app():
     app = Flask(__name__)
     
-    # Cấu hình cho app
+    # Configure app
     app.config['SECRET_KEY'] = Config.SECRET_KEY
     
-    # Kích hoạt CORS
+    # Enable CORS
     CORS(app, supports_credentials=True)
     
     with app.app_context():
-        # Route index
+        # Index route
         app.register_blueprint(index_blueprint)
     
-        # Đăng ký các Blueprint hoặc các route khác nếu cần
+        # Register Blueprints or other routes if needed
         app.register_blueprint(auth_blueprint, url_prefix='/auth')
         
         app.register_blueprint(face_recognition_blueprint, url_prefix='/face_recognition')

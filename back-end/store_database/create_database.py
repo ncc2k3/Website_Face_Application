@@ -5,7 +5,7 @@ from faker import Faker
 from deepface import DeepFace
 import json
 
-# Cấu hình kết nối PostgreSQL
+# Configure PostgreSQL connection
 db_config = {
     'dbname': 'cv_project',
     'user': 'postgres',
@@ -14,36 +14,36 @@ db_config = {
     'port': '5432'
 }
 
-# Đường dẫn tới folder chứa ảnh
+# Path to the folder containing images
 image_folder = os.path.join(os.getcwd(), 'store_database', 'imgs_database_faces')
 
-# Tạo đối tượng Flask-Bcrypt và Faker
+# Create Flask-Bcrypt and Faker objects
 bcrypt = Bcrypt()
 faker = Faker()
 
-# Kết nối tới PostgreSQL
+# Connect to PostgreSQL
 try:
     conn = psycopg2.connect(**db_config)
     cursor = conn.cursor()
-    print("Kết nối thành công tới PostgreSQL!")
+    print("Connected to PostgreSQL successfully!")
 except Exception as e:
-    print(f"Lỗi kết nối: {e}")
+    print(f"Connection error: {e}")
     exit()
 
-# Lấy link hiện tại
-# Lấy danh sách hình ảnh từ folder
+# Get current link
+# Get list of images from folder
 def get_images_from_folder(folder_path):
-    """Lấy danh sách file hình ảnh trong folder."""
+    """Get list of image files in a folder."""
     return [os.path.join(folder_path, f) for f in os.listdir(folder_path) if f.lower().endswith(('.jpg', '.jpeg', '.png'))]
 
-# Tạo mật khẩu băm
+# Create hashed password
 def hash_password(password):
-    """Hàm băm mật khẩu bằng flask-bcrypt."""
+    """Hash password using flask-bcrypt."""
     return bcrypt.generate_password_hash(password).decode('utf-8')
 
-# Thêm user vào bảng Users
+# Add user to Users table
 def add_user(first_name, last_name, email, password):
-    """Thêm một user vào bảng Users."""
+    """Add a user to the Users table."""
     cursor.execute("""
     INSERT INTO Users (first_name, last_name, email, password)
     VALUES (%s, %s, %s, %s) RETURNING user_id;
@@ -51,47 +51,47 @@ def add_user(first_name, last_name, email, password):
     conn.commit()
     return cursor.fetchone()[0]
 
-# Thêm khuôn mặt vào bảng Faces
+# Add face to Faces table
 def add_face(user_id, image_name, image_path, embedding):
-    """Thêm một khuôn mặt vào bảng Faces."""
+    """Add a face to the Faces table."""
     cursor.execute("""
     INSERT INTO Faces (user_id, image_name, image_path, embedding)
     VALUES (%s, %s, %s, %s);
     """, (user_id, image_name, image_path, json.dumps(embedding)))
     conn.commit()
 
-# Tạo dữ liệu từ hình ảnh
+# Create data from images
 def create_data_from_images(folder_path):
-    """Tạo dữ liệu từ hình ảnh và thêm vào cơ sở dữ liệu."""
+    """Create data from images and add to the database."""
     image_paths = get_images_from_folder(folder_path)
     for image_path in image_paths:
         try:
-            # Tạo thông tin user ngẫu nhiên
+            # Generate random user information
             first_name = faker.first_name()
             last_name = faker.last_name()
             email = f"{first_name.lower()}.{last_name.lower()}@example.com"
             password = hash_password("123")
 
-            # Thêm user vào bảng
+            # Add user to table
             user_id = add_user(first_name, last_name, email, password)
 
-            # Xử lý embedding từ ảnh
+            # Process embedding from image
             image_name = os.path.basename(image_path)
             embedding = DeepFace.represent(img_path=image_path, model_name="SFace")[0]["embedding"]
 
-            # Thêm khuôn mặt vào bảng Faces
+            # Add face to Faces table
             add_face(user_id, image_name, image_path, embedding)
-            print(f"Thêm thành công: {image_name} -> User ID: {user_id}")
+            print(f"Successfully added: {image_name} -> User ID: {user_id}")
 
         except Exception as e:
-            print(f"Lỗi xử lý {image_path}: {e}")
+            print(f"Error processing {image_path}: {e}")
 
-# Thực hiện các bước
+# Execute steps
 try:
     create_data_from_images(image_folder)
 except Exception as e:
-    print(f"Lỗi: {e}")
+    print(f"Error: {e}")
 finally:
     cursor.close()
     conn.close()
-    print("Đã đóng kết nối tới PostgreSQL.")
+    print("Disconnected from PostgreSQL.")

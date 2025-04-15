@@ -35,7 +35,7 @@ const FaceDetection = () => {
     const [displayedImage, setDisplayedImage] = useState(null);
     const [boundingBoxes, setBoundingBoxes] = useState([]);
     const [noFaceDetected, setNoFaceDetected] = useState(false);
-    const [faceCount, setFaceCount] = useState(0); // Lưu số lượng khuôn mặt
+    const [faceCount, setFaceCount] = useState(0); // Store number of faces
 
     const handleImageUpload = async (event) => {
         const file = event.target.files[0];
@@ -126,12 +126,12 @@ const FaceDetection = () => {
                                         sx={{
                                             width: '100%',
                                             height: 'auto',
-                                            aspectRatio: '1 / 1', // Duy trì tỷ lệ khung hình
+                                            aspectRatio: '1 / 1', // Maintain aspect ratio
                                             borderRadius: '8px',
                                             border: '2px solid red',
-                                            objectFit: 'contain', // Hiển thị vừa khung mà không bị cắt
+                                            objectFit: 'contain', // Display within frame without cropping
                                             cursor: 'pointer',
-                                            display: 'block', // Đảm bảo ảnh được hiển thị dưới dạng block để căn chỉnh chính xác
+                                            display: 'block', // Ensure image is displayed as block for proper alignment
                                         }}
                                     />
                                 </Grid>

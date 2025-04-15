@@ -9,7 +9,7 @@ class Config:
     SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URI')
     SQLALCHEMY_TRACK_MODIFICATIONS = os.getenv('SQLALCHEMY_TRACK_MODIFICATIONS')
     
-    # Thông tin kết nối
+    # Connection information
     DATABASE_CONFIG = {
         'dbname': os.getenv('DB_NAME'),
         'user': os.getenv('DB_USER'),
@@ -18,8 +18,8 @@ class Config:
         'port': os.getenv('DB_PORT')
     }
     
-    # Email và password của người gửi 
-    # Lưu ý nhập vào ở file .env
+    # Sender email and password
+    # Note: Enter in .env file
     SENDER_EMAIL = os.getenv('SENDER_EMAIL')
     SENDER_PASSWORD = os.getenv('SENDER_PASSWORD')
     

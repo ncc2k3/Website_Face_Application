@@ -7,7 +7,7 @@ from PIL import Image, ImageDraw
 img1_path = r"C:\Users\HuyTP\Documents\CV\face-recognition-app\data\input\imgs\messi-face\Image_1.jpg"
 img2_path = r"C:\Users\HuyTP\Documents\CV\face-recognition-app\data\input\imgs\alok-face\Image_2.jpg"
 
-# chon yunet: vua nhe, vua chinh xac cao
+# Choose yunet: lightweight and highly accurate
 detectors = [
     # 'opencv',
     # 'retinaface',
@@ -22,14 +22,14 @@ detectors = [
     'yunet'
 ]
 
-# chon euclidean_l2
+# Choose euclidean_l2
 metrics = [
     # 'cosine',
     # 'euclidean',
     'euclidean_l2'
 ]
 
-# chon SFace vi do chinh xac on dinh, kich thuoc trung binh
+# Choose SFace because of stable accuracy and medium size
 models = [
     # 'Facenet512',
     # 'Facenet',
@@ -43,7 +43,7 @@ models = [
     'SFace',
 ]
 
-# ko can thiet
+# Not necessary
 normalizaton = [
     'base',
     'raw',

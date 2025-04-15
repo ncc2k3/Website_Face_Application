@@ -15,13 +15,13 @@ class AuthService(BaseService):
         super().__init__(User)
         self.user_repo = UserRepository()
 
-    ### Hàm đăng ký người dùng
+    ### User registration function
     def register_user(self, first_name, last_name, email, password):
         user = self.user_repo.find_by_email(email)
         if user:
             return {"error": "Email already registered"}, 400
         
-        # Tạo user mới và mã hóa mật khẩu
+        # Create new user and hash password
         new_user = User(
             first_name=first_name,
             last_name=last_name,
@@ -30,7 +30,7 @@ class AuthService(BaseService):
         )
         new_user.set_password(password)
 
-        # Lưu user vào bảng Users
+        # Save user to Users table
         self.user_repo.add_user(new_user)
         return {"message": "User registered successfully"}, 200
 
@@ -43,7 +43,7 @@ class AuthService(BaseService):
         if not image_file:
             return {"error": "No image provided"}, 400
 
-        # Lưu ảnh tạm thời
+        # Save temporary image
         image_directory = "./store_database/imgs_database_faces"
         if not os.path.exists(image_directory):
             os.makedirs(image_directory)
@@ -52,7 +52,7 @@ class AuthService(BaseService):
         try:
             image_file.save(image_path)
 
-            # Sử dụng FaceRecognitionService để tạo embedding
+            # Use FaceRecognitionService to create embedding
             from app.packages.face_recognition.services.FaceRecognitionService import FaceRecognitionService
             face_recognition_service = FaceRecognitionService()
             embedding = face_recognition_service.extract_embedding(image_path)
@@ -60,7 +60,7 @@ class AuthService(BaseService):
             if embedding is None:
                 return {"error": "No face found in image"}, 400
 
-            # Lưu embedding và đường dẫn ảnh vào cơ sở dữ liệu
+            # Save embedding and image path to database
             self.user_repo.add_face(
                 user_id=user.user_id,
                 image_name=os.path.basename(image_path),
@@ -74,7 +74,7 @@ class AuthService(BaseService):
             return {"error": str(e)}, 500
 
 
-    ### Hàm đăng nhập bằng email và mật khẩu
+    ### Login with email and password function
     def authenticate_user(self, email, password):
         user = self.user_repo.find_by_email(email)
         if user and user.check_password(password):
@@ -89,7 +89,7 @@ class AuthService(BaseService):
 
         return {"error": "Invalid email or password"}, 400
 
-    ### Hàm đăng nhập bằng Face ID
+    ### Login with Face ID function
     def authenticate_by_face(self, image_file):
         temp_image_path = f"./app/images_tempt/{uuid.uuid4()}.jpg"
         try:
@@ -122,22 +122,22 @@ class AuthService(BaseService):
         finally:
             os.remove(temp_image_path)
 
-    ### Hàm reset mật khẩu
+    ### Reset password function
     def reset_password(self, email):
         user = self.user_repo.find_by_email(email)
         if not user:
             return {"error": "User not found"}, 400
 
-        # Tạo mật khẩu mới và gửi qua email
+        # Create new password and send via email
         new_password = str(uuid.uuid4())[:8]
         user.set_password(new_password)
         self.user_repo.update_user(user, {"password": user.password})
 
-        # Gửi email
+        # Send email
         self.send_email(email, "Reset Password", f"Your new password is: {new_password}")
         return {"message": "New password sent to your email"}, 200
 
-    ### Hàm gửi email
+    ### Send email function
     @staticmethod
     def send_email(to_email, subject, body):
         sender_email = Config.SENDER_EMAIL

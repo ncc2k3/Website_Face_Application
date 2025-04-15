@@ -1,28 +1,28 @@
 import psycopg2
 from flask_bcrypt import Bcrypt
 
-# Tạo đối tượng Bcrypt
+# Create Bcrypt object
 bcrypt = Bcrypt()
 
-# Cấu hình kết nối PostgreSQL
+# Configure PostgreSQL connection
 db_config = {
-    "dbname": "your_database_name",  # Thay tên database
-    "user": "your_username",         # Thay username PostgreSQL
-    "password": "your_password",     # Thay password PostgreSQL
+    "dbname": "your_database_name",  # Replace database name
+    "user": "your_username",         # Replace PostgreSQL username
+    "password": "your_password",     # Replace PostgreSQL password
     "host": "localhost",             # Host
-    "port": "5432"                   # Cổng PostgreSQL (mặc định: 5432)
+    "port": "5432"                   # PostgreSQL port (default: 5432)
 }
 
-# Kết nối tới PostgreSQL
+# Connect to PostgreSQL
 try:
     conn = psycopg2.connect(**db_config)
     cursor = conn.cursor()
-    print("Kết nối thành công tới PostgreSQL!")
+    print("Connected to PostgreSQL successfully!")
 except Exception as e:
-    print(f"Lỗi kết nối: {e}")
+    print(f"Connection error: {e}")
     exit()
 
-# Tạo bảng Users
+# Create Users table
 try:
     cursor.execute("""
     DROP TABLE IF EXISTS Faces CASCADE;
@@ -33,15 +33,15 @@ try:
         first_name VARCHAR(50) NOT NULL,
         last_name VARCHAR(50) NOT NULL,
         email VARCHAR(100) UNIQUE NOT NULL,
-        password VARCHAR(256) NOT NULL,  -- Lưu mật khẩu đã mã hóa
+        password VARCHAR(256) NOT NULL,  # Store hashed password
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
     """)
-    print("Bảng Users đã được tạo!")
+    print("Users table created successfully!")
 except Exception as e:
-    print(f"Lỗi tạo bảng Users: {e}")
+    print(f"Error creating Users table: {e}")
 
-# Tạo bảng Faces
+# Create Faces table
 try:
     cursor.execute("""
     CREATE TABLE Faces (
@@ -49,15 +49,15 @@ try:
         user_id INT REFERENCES Users(user_id) ON DELETE CASCADE,
         image_name VARCHAR(255) NOT NULL,
         image_path VARCHAR(255) NOT NULL,
-        embedding JSONB NOT NULL, -- Lưu trữ embeddings dạng JSON
+        embedding JSONB NOT NULL, # Store embeddings as JSON
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
     """)
-    print("Bảng Faces đã được tạo!")
+    print("Faces table created successfully!")
 except Exception as e:
-    print(f"Lỗi tạo bảng Faces: {e}")
+    print(f"Error creating Faces table: {e}")
 
-# Đóng kết nối
+# Close connection
 cursor.close()
 conn.close()
-print("Cơ sở dữ liệu đã được thiết lập xong.")
+print("Database setup completed.")

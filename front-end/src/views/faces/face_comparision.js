@@ -11,13 +11,13 @@ import { callApi } from 'utils/apiHelper';
 import { API_CONFIG } from 'apiConfig';
 
 const FaceComparison = () => {
-    const [firstImage, setFirstImage] = useState(null); // Ảnh gốc hiển thị
-    const [resizedFirstFile, setResizedFirstFile] = useState(null); // Ảnh đã resize
-    const [secondImage, setSecondImage] = useState(null); // Ảnh gốc hiển thị
-    const [resizedSecondFile, setResizedSecondFile] = useState(null); // Ảnh đã resize
+    const [firstImage, setFirstImage] = useState(null); // Original display image
+    const [resizedFirstFile, setResizedFirstFile] = useState(null); // Resized image
+    const [secondImage, setSecondImage] = useState(null); // Original display image
+    const [resizedSecondFile, setResizedSecondFile] = useState(null); // Resized image
     const [comparisonResult, setComparisonResult] = useState(null);
     const [error, setError] = useState(null);
-    const [dialogOpen, setDialogOpen] = useState(false); // Trạng thái mở form thông báo
+    const [dialogOpen, setDialogOpen] = useState(false); // Form notification state
 
     // Resize image to 224x224 pixels
     const resizeImage = (file) => {
@@ -39,10 +39,10 @@ const FaceComparison = () => {
     const handleFirstImageUpload = async (event) => {
         const file = event.target.files[0];
         if (file) {
-            const imageUrl = URL.createObjectURL(file); // Ảnh gốc để hiển thị
+            const imageUrl = URL.createObjectURL(file); // Original image for display
             setFirstImage(imageUrl);
 
-            const resizedBlob = await resizeImage(file); // Resize ảnh để gửi
+            const resizedBlob = await resizeImage(file); // Resize image for sending
             setResizedFirstFile(resizedBlob);
         }
     };
@@ -51,10 +51,10 @@ const FaceComparison = () => {
     const handleSecondImageUpload = async (event) => {
         const file = event.target.files[0];
         if (file) {
-            const imageUrl = URL.createObjectURL(file); // Ảnh gốc để hiển thị
+            const imageUrl = URL.createObjectURL(file); // Original image for display
             setSecondImage(imageUrl);
 
-            const resizedBlob = await resizeImage(file); // Resize ảnh để gửi
+            const resizedBlob = await resizeImage(file); // Resize image for sending
             setResizedSecondFile(resizedBlob);
         }
     };
@@ -76,8 +76,8 @@ const FaceComparison = () => {
             // console.log(response.data[0]?.error);
             // Kiểm tra nếu response.data là một mảng và chứa lỗi
             if (Array.isArray(response.data) && response.data[0]?.error) {
-                setError(response.data[0].error); // Ghi nhận lỗi từ back-end
-                setDialogOpen(true); // Mở dialog hiển thị lỗi
+                setError(response.data[0].error); // Record error from back-end
+                setDialogOpen(true); // Open error dialog
                 return;
             }
 
@@ -106,6 +106,7 @@ const FaceComparison = () => {
             setError("An error occurred during comparison. Please try again.");
             setDialogOpen(true);
         }
+        setDialogOpen(false); // Close notification form if open
     };
 
 

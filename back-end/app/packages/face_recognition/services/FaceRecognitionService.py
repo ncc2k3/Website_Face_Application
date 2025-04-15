@@ -9,52 +9,52 @@ import faiss
 
 class FaceRecognitionService:
     def __init__(self):
-        self.detector = 'opencv'  # Sử dụng YuNet làm detector trong DeepFace
-        self.model = 'SFace'  # Sử dụng SFace model trong DeepFace
+        self.detector = 'opencv'  # Use YuNet as detector in DeepFace
+        self.model = 'SFace'  # Use SFace model in DeepFace
         self.faiss_index = None
-        self.face_id_map = {} # Lưu ánh xạ giữa FAISS index và face_id
+        self.face_id_map = {} # Store mapping between FAISS index and face_id
         
     def build_faiss_index(self):
         """
-        Tạo FAISS index từ cơ sở dữ liệu embedding.
+        Create FAISS index from database embeddings.
         """
         db_embeddings = self.get_embeddings_from_db()
         embeddings = np.array([item["embedding"] for item in db_embeddings]).astype('float32')
 
-        # Normalize tất cả vector embedding
+        # Normalize all embedding vectors
         faiss.normalize_L2(embeddings)
 
-        # Tạo FAISS index với Inner Product cho cosine similarity
+        # Create FAISS index with Inner Product for cosine similarity
         self.faiss_index = faiss.IndexFlatIP(embeddings.shape[1])  # Inner Product (IP)
         self.faiss_index.add(embeddings)
 
-        # Lưu ánh xạ giữa FAISS index và face_id
+        # Store mapping between FAISS index and face_id
         self.face_id_map = {i: item["face_id"] for i, item in enumerate(db_embeddings)}
     
     """ ==================== detect faces ==================== """    
     def detect_faces(self, image_path):
         """
-        Phát hiện khuôn mặt trong ảnh và trả về danh sách bounding box.
+        Detect faces in image and return list of bounding boxes.
         """
-        # Tải ảnh từ đường dẫn
+        # Load image from path
         img = cv2.imread(image_path)
 
-        # Sử dụng DeepFace để phát hiện khuôn mặt
+        # Use DeepFace to detect faces
         faces = DeepFace.extract_faces(
             img_path=image_path,
             detector_backend=self.detector,
-            enforce_detection = False,  # Không yêu cầu phát hiện khuôn mặt nếu ảnh đã chứa khuôn mặt
+            enforce_detection = False,  # Don't require face detection if image already contains face
             align = True
         )
 
-        # Kiểm tra nếu không phát hiện khuôn mặt
+        # Check if no face detected
         if not faces:
             return {"message": "No faces detected"}, 400
 
-        # Tạo danh sách bounding box từ kết quả phát hiện
+        # Create list of bounding boxes from detection results
         bounding_boxes = []
         for face in faces:
-            box = face["facial_area"]  # Lấy tọa độ bounding box
+            box = face["facial_area"]  # Get bounding box coordinates
             bounding_boxes.append({
                 "x": int(box["x"]),
                 "y": int(box["y"]),
@@ -70,11 +70,10 @@ class FaceRecognitionService:
 
     """ ==================== face compares ==================== """    
     def face_compares(self, image1_path, image2_path):
-
         """
-        So sánh 2 ảnh và trả về độ giống nhau giữa chúng.
+        Compare 2 images and return similarity between them.
         """
-        # Sử dụng DeepFace để so sánh 2 ảnh
+        # Use DeepFace to compare 2 images
         try:
             result = DeepFace.verify(
                 image1_path,
@@ -83,52 +82,51 @@ class FaceRecognitionService:
                 detector_backend=self.detector,
                 # metric: cosine, euclidean, euclidean_l2
                 distance_metric='cosine',
-                enforce_detection=True # Yêu cầu phát hiện khuôn mặt trước khi so sánh
+                enforce_detection=True # Require face detection before comparison
             )
 
-            # Trả về kết quả so sánh
+            # Return comparison result
             return {
                 "verified": result["verified"],
                 "distance": result["distance"],
                 'threshold': result['threshold'],
             }
         except Exception as e:
-            # Trả về lỗi nếu có vấn đề trong quá trình so sánh
+            # Return error if there's an issue during comparison
             return {"error": str(e)}, 400
         
     """ ==================== liveness detection ==================== """
     def liveness_detection(self, image_path):
         """
-        Kiểm tra liveness và chống giả mạo (anti-spoofing) từ ảnh đầu vào.
+        Check liveness and anti-spoofing from input image.
         """
         try:
-            # Kiểm tra ảnh có hợp lệ không
+            # Check if image is valid
             img = cv2.imread(image_path)
-            
             
             if img is None:
                 raise ValueError("Image could not be loaded. Check the file path.")
 
-            # Gọi hàm extract_faces để phân tích khuôn mặt
+            # Call extract_faces function to analyze face
             faces = DeepFace.extract_faces(
                 img_path=image_path,
-                detector_backend=self.detector,  # Bộ phát hiện khuôn mặt (opencv, mtcnn, ...)
-                # enforce_detection=True,          # Bắt buộc phát hiện khuôn mặt
-                anti_spoofing=True               # Kích hoạt kiểm tra chống giả mạo
+                detector_backend=self.detector,  # Face detector (opencv, mtcnn, ...)
+                # enforce_detection=True,          # Force face detection
+                anti_spoofing=True               # Enable anti-spoofing check
             )
 
-            # Nếu không phát hiện khuôn mặt
+            # If no face detected
             if not faces:
                 return {"message": "No faces detected", "liveness": False, "spoofing": None}, 400
 
-            # Duyệt qua các khuôn mặt được phát hiện
+            # Iterate through detected faces
             results = []
             for face in faces:
-                is_real = face.get("is_real", None)  # Trạng thái chống giả mạo
-                spoof_score = face.get("antispoof_score", None)  # Điểm số chống giả mạo
-                confidence = face.get("confidence", None)  # Độ tin cậy phát hiện khuôn mặt
+                is_real = face.get("is_real", None)  # Anti-spoofing status
+                spoof_score = face.get("antispoof_score", None)  # Anti-spoofing score
+                confidence = face.get("confidence", None)  # Face detection confidence
 
-                # Nếu kết quả hợp lệ, trả về trạng thái
+                # If result is valid, return status
                 results.append({
                     "confidence": confidence,
                     "liveness": is_real,
@@ -142,8 +140,8 @@ class FaceRecognitionService:
     """ ==================== face seacrh ==================== """
     def get_embeddings_from_db(self):
         """
-        Truy xuất embeddings từ cơ sở dữ liệu PostgreSQL.
-        faiss - thêm - xóa (cút)
+        Retrieve embeddings from PostgreSQL database.
+        faiss - add - delete (exit)
         """
         conn = get_connection()
         cursor = conn.cursor()
@@ -151,12 +149,12 @@ class FaceRecognitionService:
             cursor.execute("SELECT face_id, user_id, embedding FROM Faces;")
             data = cursor.fetchall()
 
-            # Chuyển đổi embedding JSON sang numpy array
+            # Convert embedding JSON to numpy array
             embeddings = [
                 {
                     "face_id": row[0],
                     "user_id": row[1],
-                    "embedding": np.array(row[2])  # Embedding dạng numpy array
+                    "embedding": np.array(row[2])  # Embedding as numpy array
                 }
                 for row in data
             ]
@@ -167,7 +165,7 @@ class FaceRecognitionService:
 
     def extract_embedding(self, image_path):
         """
-        Tạo embedding từ ảnh đầu vào bằng cách sử dụng DeepFace.
+        Create embedding from input image using DeepFace.
         """
         try:
             embeddings = DeepFace.represent(
@@ -185,10 +183,10 @@ class FaceRecognitionService:
 
     def search_face(self, image_path):
         """
-        Tìm kiếm khuôn mặt trong cơ sở dữ liệu bằng FAISS.
+        Search for face in database using FAISS.
         """
         try:
-            # Tạo embedding cho ảnh truy vấn
+            # Create embedding for query image
             query_embedding = self.extract_embedding(image_path)
             if query_embedding is None:
                 return {"matched": False, "message": "No face detected in the image"}
@@ -200,15 +198,15 @@ class FaceRecognitionService:
             query_embedding = np.expand_dims(query_embedding, axis=0).astype('float32')
             faiss.normalize_L2(query_embedding)
 
-            # Tìm kiếm nearest neighbor
+            # Find nearest neighbor
             distances, indices = self.faiss_index.search(query_embedding, k=1)
 
-            # Lấy kết quả tốt nhất
+            # Get best result
             best_index = indices[0][0]
-            similarity = float(distances[0][0])  # Chuyển numpy.float32 sang float
+            similarity = float(distances[0][0])  # Convert numpy.float32 to float
             best_face_id = self.face_id_map[best_index]
 
-            # Truy xuất thông tin khuôn mặt từ cơ sở dữ liệu
+            # Retrieve face information from database
             conn = get_connection()
             cursor = conn.cursor()
             try:
@@ -224,7 +222,7 @@ class FaceRecognitionService:
 
                 return {
                     "matched": True,
-                    "similarity": similarity,  # Đã chuyển sang kiểu float
+                    "similarity": similarity,  # Converted to float type
                     "user_id": user_id,
                     "image_base64": encoded_image
                 }
@@ -237,40 +235,40 @@ class FaceRecognitionService:
     #####################################
     def build_faiss_index_from_folder(self, folder_path):
         """
-        Tạo FAISS index từ các ảnh trong một folder.
+        Create FAISS index from images in a folder.
         """
         try:
             embeddings = []
             self.face_id_map = {}
 
-            # Duyệt qua tất cả file ảnh trong folder
+            # Iterate through all image files in folder
             for i, filename in enumerate(os.listdir(folder_path)):
                 file_path = os.path.join(folder_path, filename)
                 if os.path.isfile(file_path):
                     embedding = self.extract_embedding(file_path)
                     if embedding is not None:
                         embeddings.append(embedding)
-                        self.face_id_map[i] = file_path  # Lưu ánh xạ index -> file path
+                        self.face_id_map[i] = file_path  # Store index -> file path mapping
 
-            # Nếu không có embeddings nào, trả về lỗi
+            # If no embeddings, return error
             if not embeddings:
                 raise ValueError("No valid faces found in the folder.")
 
             embeddings = np.array(embeddings).astype('float32')
             faiss.normalize_L2(embeddings)
 
-            # Tạo FAISS index IVF
+            # Create FAISS index IVF
             dim = embeddings.shape[1]
-            nlist = 10  # Số cụm (clusters)
-            quantizer = faiss.IndexFlatL2(dim)  # Sử dụng quantizer L2 (hoặc có thể dùng IndexFlatIP)
+            nlist = 10  # Number of clusters
+            quantizer = faiss.IndexFlatL2(dim)  # Use L2 quantizer (or can use IndexFlatIP)
             self.faiss_index = faiss.IndexIVFFlat(quantizer, dim, nlist, faiss.METRIC_L2)
 
-            # Huấn luyện index IVF
+            # Train IVF index
             if not self.faiss_index.is_trained:
                 print(f"Training FAISS index with {embeddings.shape[0]} samples...")
                 self.faiss_index.train(embeddings)
 
-            # Thêm embeddings vào index
+            # Add embeddings to index
             print("Adding embeddings to FAISS index...")
             self.faiss_index.add(embeddings)
 
@@ -280,14 +278,14 @@ class FaceRecognitionService:
 
     def search_face_in_folder(self, image_path, folder_path):
         """
-        Tìm kiếm khuôn mặt trong một folder và trả về danh sách 5 ảnh phù hợp cùng danh sách độ tương tự.
+        Search for face in a folder and return list of 5 matching images with similarity scores.
         """
         try:
-            # Kiểm tra và cập nhật FAISS index nếu cần
+            # Check and update FAISS index if needed
             if self.faiss_index is None or not self.face_id_map:
                 self.build_faiss_index_from_folder(folder_path)
 
-            # Tạo embedding cho ảnh truy vấn
+            # Create embedding for query image
             query_embedding = self.extract_embedding(image_path)
             if query_embedding is None:
                 return {"matched": False, "message": "No face detected in the query image."}
@@ -295,26 +293,26 @@ class FaceRecognitionService:
             query_embedding = np.expand_dims(query_embedding, axis=0).astype('float32')
             faiss.normalize_L2(query_embedding)
 
-            # Tìm kiếm nearest neighbors (Top K)
-            k = 5  # Số lượng kết quả trả về
-            nprobe = 5  # Số lượng cụm tìm kiếm trong FAISS (thường ít hơn hoặc bằng nlist)
+            # Find nearest neighbors (Top K)
+            k = 5  # Number of results to return
+            nprobe = 5  # Number of clusters to search in FAISS (usually less than or equal to nlist)
             self.faiss_index.nprobe = nprobe
             distances, indices = self.faiss_index.search(query_embedding, k=k)
             print("\n\n\Indices:", indices)
-            # Khởi tạo danh sách kết quả
+            # Initialize result list
             encoded_images = []
             similarities = []
 
-            # Duyệt qua các kết quả trả về
+            # Iterate through returned results
             for i, index in enumerate(indices[0]):
                 file_path = self.face_id_map.get(index, None)
                 similarity = float(distances[0][i])
 
-                # Bỏ qua nếu file không tồn tại
+                # Skip if file doesn't exist
                 if file_path is None or not os.path.exists(file_path):
                     continue
 
-                # Đọc và encode ảnh
+                # Read and encode image
                 with open(file_path, "rb") as image_file:
                     encoded_image = base64.b64encode(image_file.read()).decode("utf-8")
                     encoded_images.append(encoded_image)
